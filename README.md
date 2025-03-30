@@ -19,6 +19,7 @@ Sistema web desarrollado para facilitar el proceso de reclutamiento y gestión d
 - Bootstrap 4
 - SASS/SCSS
 - Chart.js para los Gráficos
+- AOS (Animate On Scroll) para animaciones
 
 ## 📋 Requisitos Previos
 
@@ -33,10 +34,13 @@ git clone https://github.com/GtbNIK/Proyecto_Reclutamiento_Tesis.git
 2. Instala las dependencias:
 npm install
 
-3. Inicia el servidor de desarrollo:
+3. Instala AOS para las animaciones:
+npm install aos --save
+
+4. Inicia el servidor de desarrollo:
 npm start
 
-4. Abre tu navegador y visita:
+5. Abre tu navegador y visita:
 http://localhost:3000
 
 ## 📁 Estructura del Proyecto

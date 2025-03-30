@@ -1,0 +1,226 @@
+.landing-page {
+  min-height: 100vh;
+  display: flex;
+  flex-direction: column;
+  background-image: url('../img/theme/football-bg.jpg');
+  background-size: cover;
+  background-position: center;
+  background-attachment: fixed;
+  position: relative;
+  font-family: 'Poppins', sans-serif;
+}
+
+.landing-page::before {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background: linear-gradient(rgba(0, 0, 0, 0.7), rgba(0, 0, 0, 0.5));
+  z-index: 1;
+}
+
+/* Header Styles */
+.landing-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 1.5rem 3rem;
+  background: rgba(255, 255, 255, 0.98);
+  position: relative;
+  z-index: 2;
+  box-shadow: 0 2px 20px rgba(0, 0, 0, 0.1);
+}
+
+.logo img {
+  height: 45px;
+  width: auto;
+}
+
+.login-button {
+  padding: 0.7rem 2rem !important;
+  font-weight: 600 !important;
+  text-transform: uppercase !important;
+  letter-spacing: 1px !important;
+  border-radius: 50px !important;
+  transition: all 0.3s ease !important;
+  background-color: #2dce89 !important;
+  border-color: #2dce89 !important;
+  color: white !important;
+  font-size: 0.9rem !important;
+}
+
+.login-button:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 5px 15px rgba(45, 206, 137, 0.4) !important;
+  background-color: #26af74 !important;
+  border-color: #26af74 !important;
+}
+
+/* Main Content Styles */
+.landing-main {
+  flex: 1;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  position: relative;
+  z-index: 2;
+  padding: 2rem;
+}
+
+.content-wrapper {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 4rem;
+  max-width: 1200px;
+  margin: 0 auto;
+}
+
+.countdown-container {
+  text-align: center;
+  color: white;
+}
+
+.countdown-container h1 {
+  font-size: 3.5rem;
+  margin-bottom: 2rem;
+  text-shadow: 2px 2px 4px rgba(0, 0, 0, 0.5);
+  color: white;
+  font-weight: 300;
+  letter-spacing: 1px;
+}
+
+.countdown-box {
+  background: rgba(255, 255, 255, 0.98);
+  padding: 2.5rem 5rem;
+  border-radius: 20px;
+  display: inline-flex;
+  flex-direction: column;
+  align-items: center;
+  box-shadow: 0 15px 35px rgba(0, 0, 0, 0.2);
+  transition: all 0.4s ease;
+}
+
+.countdown-box:hover {
+  transform: translateY(-5px);
+  box-shadow: 0 20px 40px rgba(0, 0, 0, 0.3);
+}
+
+.countdown-box span:first-child {
+  font-size: 5rem;
+  font-weight: 700;
+  color: #2dce89;
+  line-height: 1;
+  text-shadow: 2px 2px 4px rgba(45, 206, 137, 0.2);
+}
+
+.countdown-box span:last-child {
+  font-size: 1.8rem;
+  color: #2dce89;
+  margin-top: 0.5rem;
+  font-weight: 300;
+  letter-spacing: 2px;
+}
+
+/* Call to Action Styles */
+.cta-container {
+  text-align: center;
+  max-width: 800px;
+  margin: 0 auto;
+}
+
+.cta-text {
+  color: white;
+  font-size: 1.5rem;
+  line-height: 1.6;
+  margin-bottom: 2rem;
+  text-shadow: 1px 1px 3px rgba(0, 0, 0, 0.5);
+  font-weight: 300;
+}
+
+.cta-button {
+  padding: 1rem 3rem !important;
+  font-size: 1.2rem !important;
+  text-transform: uppercase !important;
+  letter-spacing: 1px !important;
+  border-radius: 50px !important;
+  background: linear-gradient(45deg, #2dce89, #2dcea9) !important;
+  border: none !important;
+  box-shadow: 0 10px 20px rgba(45, 206, 137, 0.3) !important;
+  transition: all 0.4s ease !important;
+}
+
+.cta-button:hover {
+  transform: translateY(-3px) !important;
+  box-shadow: 0 15px 30px rgba(45, 206, 137, 0.4) !important;
+  background: linear-gradient(45deg, #26af74, #2dce89) !important;
+}
+
+/* Footer Styles */
+.landing-footer {
+  background: rgba(255, 255, 255, 0.98);
+  color: #525f7f;
+  text-align: center;
+  padding: 1.2rem;
+  position: relative;
+  z-index: 2;
+  box-shadow: 0 -2px 20px rgba(0, 0, 0, 0.1);
+  font-size: 0.9rem;
+  letter-spacing: 0.5px;
+}
+
+.landing-footer p {
+  margin: 0;
+}
+
+/* Responsive Design */
+@media (max-width: 768px) {
+  .landing-header {
+    padding: 1rem 1.5rem;
+  }
+
+  .countdown-container h1 {
+    font-size: 2.5rem;
+  }
+
+  .countdown-box {
+    padding: 2rem 3rem;
+  }
+
+  .countdown-box span:first-child {
+    font-size: 4rem;
+  }
+
+  .countdown-box span:last-child {
+    font-size: 1.4rem;
+  }
+
+  .cta-text {
+    font-size: 1.2rem;
+    padding: 0 1rem;
+  }
+
+  .cta-button {
+    padding: 0.8rem 2rem !important;
+    font-size: 1rem !important;
+  }
+
+  .content-wrapper {
+    gap: 3rem;
+  }
+}
+
+/* Animations */
+@keyframes float {
+  0% {
+    transform: translateY(0px);
+  }
+  50% {
+    transform: translateY(-10px);
+  }
+  100% {
+    transform: translateY(0px);
+  }
+} 
