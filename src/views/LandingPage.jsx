@@ -1,17 +1,24 @@
-import React, { useEffect } from "react";
+import React, { useEffect, useState } from "react";
 import { Link } from "react-router-dom";
 import { Button } from "reactstrap";
 import "assets/css/LandingPage.css";
 import AOS from 'aos';
 import 'aos/dist/aos.css';
+import ReclutamientoForm from "./ReclutamientoForm";
 
 const LandingPage = () => {
+  const [formModalOpen, setFormModalOpen] = useState(false);
+
   useEffect(() => {
     AOS.init({
       duration: 1000,
       once: true
     });
   }, []);
+
+  const toggleFormModal = () => {
+    setFormModalOpen(!formModalOpen);
+  };
 
   return (
     <div className="landing-page">
@@ -50,13 +57,16 @@ const LandingPage = () => {
               color="success" 
               size="lg" 
               className="cta-button"
-              onClick={() => window.location.href = '/auth/register'}
+              onClick={toggleFormModal}
             >
               Enviar Solicitud de Reclutamiento
             </Button>
           </div>
         </div>
       </main>
+
+      {/* Modal del formulario */}
+      <ReclutamientoForm isOpen={formModalOpen} toggle={toggleFormModal} />
 
       {/* Footer */}
       <footer className="landing-footer">

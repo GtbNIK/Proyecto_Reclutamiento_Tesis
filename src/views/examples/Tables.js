@@ -51,6 +51,7 @@ import {
 import Header from "components/Headers/Header.js";
 import { useState } from "react";
 import React from "react";
+import ReclutamientoForm from "../ReclutamientoForm";
 
 // Estilos para el efecto hover
 const hoverStyles = `
@@ -177,6 +178,20 @@ const Tables = () => {
   const handleConfirmPreSelection = () => {
     // Aquí puedes agregar la lógica para confirmar la pre-selección
     setConfirmModalOpen(false);
+  };
+
+  const [formModalOpen, setFormModalOpen] = useState(false);
+  const toggleFormModal = () => setFormModalOpen(!formModalOpen);
+
+  // Función para agregar un nuevo jugador
+  const addPlayer = (newPlayer) => {
+    setPlayers((prevPlayers) => ({
+      ...prevPlayers,
+      [newPlayer.cedula]: {
+        ...newPlayer,
+        estado: "pendiente", // Estado inicial
+      },
+    }));
   };
 
   return (
@@ -475,6 +490,8 @@ const Tables = () => {
             )}
           </ModalBody>
         </Modal>
+
+        <ReclutamientoForm isOpen={formModalOpen} toggle={toggleFormModal} addPlayer={addPlayer} />
       </Container>
     </>
   );
