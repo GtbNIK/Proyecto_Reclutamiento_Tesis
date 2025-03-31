@@ -38,6 +38,13 @@ const routes = [
     layout: "/admin"
   },
   {
+    path: "/solicitudes",
+    name: "Solicitudes",
+    icon: "ni ni-single-copy-04 text-blue",
+    component: Tables,
+    layout: "/admin"
+  },
+  {
     path: "/user-profile",
     name: "Perfil de Usuario",
     icon: "ni ni-single-02 text-yellow",
