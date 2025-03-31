@@ -15,8 +15,8 @@
 * The above copyright notice and this permission notice shall be included in all copies or substantial portions of the Software.
 
 */
-import React from "react";
-import { Navigate, Route, Routes } from "react-router-dom";
+import React, { useState } from "react";
+import { Navigate, Route, Routes, useNavigate } from "react-router-dom";
 import Index from "views/Index.js";
 import Profile from "views/examples/Profile.js";
 import Maps from "views/examples/Maps.js";
@@ -62,6 +62,14 @@ const routes = [
 
 // Componente principal para el enrutamiento
 function App() {
+  const [logoutModalOpen, setLogoutModalOpen] = useState(false);
+  const navigate = useNavigate();
+
+  const handleLogout = () => {
+    setLogoutModalOpen(false);
+    navigate("/");
+  };
+
   return (
     <Routes>
       {/* Landing Page Route */}

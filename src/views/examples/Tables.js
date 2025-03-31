@@ -45,6 +45,7 @@ import {
   Modal,
   ModalHeader,
   ModalBody,
+  ModalFooter,
 } from "reactstrap";
 // core components
 import Header from "components/Headers/Header.js";
@@ -86,6 +87,9 @@ const Tables = () => {
       estado: "pendiente"
     }
   });
+
+  // Estado para el modal de confirmación
+  const [confirmModalOpen, setConfirmModalOpen] = useState(false);
 
   // Función para filtrar jugadores
   const filterPlayers = (term) => {
@@ -133,6 +137,17 @@ const Tables = () => {
     }));
   };
 
+  // Función para manejar el retorno de un jugador a solicitudes
+  const handleReturn = (cedula) => {
+    setPlayers(prevPlayers => ({
+      ...prevPlayers,
+      [cedula]: {
+        ...prevPlayers[cedula],
+        estado: "pendiente"
+      }
+    }));
+  };
+
   // Efecto para filtrar jugadores cuando cambia el término de búsqueda
   const [filteredPlayers, setFilteredPlayers] = useState({
     solicitudes: [],
@@ -158,6 +173,12 @@ const Tables = () => {
     setModalOpen(true);
   };
 
+  // Función para confirmar la pre-selección
+  const handleConfirmPreSelection = () => {
+    // Aquí puedes agregar la lógica para confirmar la pre-selección
+    setConfirmModalOpen(false);
+  };
+
   return (
     <>
       {/* Simple header without stats */}
@@ -175,7 +196,7 @@ const Tables = () => {
           <div className="col">
             <Card className="shadow">
               <CardBody>
-                <Row>
+        <Row>
                   <Col lg="11">
                     <FormGroup className="mb-0">
                       <InputGroup className="input-group-alternative">
@@ -233,7 +254,7 @@ const Tables = () => {
                     >
                       <td>
                         <span className="mb-0 text-sm">{player.nombre} {player.apellido}</span>
-                      </td>
+                    </td>
                       <td>{cedula}</td>
                       <td>{player.posicion}</td>
                       <td onClick={(e) => e.stopPropagation()}>
@@ -241,7 +262,7 @@ const Tables = () => {
                           <>
                             <Button
                               color="success"
-                              size="sm"
+                              size="lg"
                               className="mr-2"
                               onClick={(e) => {
                                 e.preventDefault();
@@ -252,7 +273,7 @@ const Tables = () => {
                             </Button>
                             <Button
                               color="danger"
-                              size="sm"
+                              size="lg"
                               onClick={(e) => {
                                 e.preventDefault();
                                 handleDiscard(cedula);
@@ -264,14 +285,16 @@ const Tables = () => {
                         ) : player.estado === "descartado" ? (
                           <Button
                             color="danger"
-                            size="sm"
+                            size="lg"
                             disabled
                           >
                             No califica
                           </Button>
-                        ) : null}
-                      </td>
-                    </tr>
+                        ) : (
+                          <Badge color="success">Aprobado</Badge>
+                        )}
+                    </td>
+                  </tr>
                   ))}
                 </tbody>
               </Table>
@@ -293,6 +316,7 @@ const Tables = () => {
                     <th scope="col">Cédula</th>
                     <th scope="col">Posición</th>
                     <th scope="col">Estado</th>
+                    <th scope="col">Acciones</th>
                   </tr>
                 </thead>
                 <tbody>
@@ -305,19 +329,55 @@ const Tables = () => {
                     >
                       <td>
                         <span className="mb-0 text-sm">{player.nombre} {player.apellido}</span>
-                      </td>
+                    </td>
                       <td>{cedula}</td>
                       <td>{player.posicion}</td>
                       <td>
                         <Badge color="success">Aprobado</Badge>
-                      </td>
-                    </tr>
+                    </td>
+                    <td>
+                        <Button
+                          color="warning"
+                          size="lg"
+                          onClick={(e) => {
+                            e.stopPropagation(); // Evitar que el clic en el botón abra la carta
+                            handleReturn(cedula);
+                          }}
+                        >
+                          Volver
+                        </Button>
+                    </td>
+                  </tr>
                   ))}
                 </tbody>
               </Table>
+              <Button
+                color="primary"
+                onClick={() => setConfirmModalOpen(true)} // Abre el modal de confirmación
+              >
+                Confirmar Pre-selección
+              </Button>
             </Card>
-          </div>
+                      </div>
         </Row>
+
+        {/* Modal de Confirmación de Pre-selección */}
+        <Modal
+          className="modal-dialog-centered"
+          isOpen={confirmModalOpen}
+          toggle={() => setConfirmModalOpen(false)}
+        >
+          <ModalHeader toggle={() => setConfirmModalOpen(false)}>
+            Confirmar Pre-selección
+          </ModalHeader>
+          <ModalBody>
+            ¿Está seguro de que desea confirmar la pre-selección?
+          </ModalBody>
+          <ModalFooter>
+            <Button color="primary" onClick={handleConfirmPreSelection}>Confirmar</Button>
+            <Button color="secondary" onClick={() => setConfirmModalOpen(false)}>Volver</Button>
+          </ModalFooter>
+        </Modal>
 
         {/* Modal de Información del Jugador */}
         <Modal
@@ -338,7 +398,7 @@ const Tables = () => {
                         <label className="form-control-label">Nombre</label>
                         <div className="h4 font-weight-normal border rounded p-3" style={{ borderColor: '#e9ecef' }}>
                           {selectedPlayer.nombre}
-                        </div>
+                      </div>
                       </FormGroup>
                     </Col>
                     <Col md="6">
@@ -356,7 +416,7 @@ const Tables = () => {
                         <label className="form-control-label">Cédula</label>
                         <div className="h4 font-weight-normal border rounded p-3" style={{ borderColor: '#e9ecef' }}>
                           {selectedPlayer.cedula}
-                        </div>
+                      </div>
                       </FormGroup>
                     </Col>
                     <Col md="4">
@@ -364,7 +424,7 @@ const Tables = () => {
                         <label className="form-control-label">Edad</label>
                         <div className="h4 font-weight-normal border rounded p-3" style={{ borderColor: '#e9ecef' }}>
                           {selectedPlayer.edad} años
-                        </div>
+                      </div>
                       </FormGroup>
                     </Col>
                     <Col md="4">
@@ -382,7 +442,7 @@ const Tables = () => {
                         <label className="form-control-label">Posición</label>
                         <div className="h4 font-weight-normal border rounded p-3" style={{ borderColor: '#e9ecef' }}>
                           {selectedPlayer.posicion}
-                        </div>
+                      </div>
                       </FormGroup>
                     </Col>
                   </Row>
@@ -394,7 +454,7 @@ const Tables = () => {
                           <pre className="mb-0" style={{ whiteSpace: 'pre-wrap', fontFamily: 'inherit' }}>
                             {selectedPlayer.trayectoria}
                           </pre>
-                        </div>
+                      </div>
                       </FormGroup>
                     </Col>
                   </Row>
@@ -409,7 +469,7 @@ const Tables = () => {
                         </div>
                       </FormGroup>
                     </Col>
-                  </Row>
+        </Row>
                 </CardBody>
               </Card>
             )}
