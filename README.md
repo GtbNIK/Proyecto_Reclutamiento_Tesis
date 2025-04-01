@@ -37,6 +37,9 @@ npm install
 3. Instala AOS para las animaciones:
 npm install aos --save
 
+Conecta con la base de datos:
+node src/server.js
+
 4. Inicia el servidor de desarrollo:
 npm start
 

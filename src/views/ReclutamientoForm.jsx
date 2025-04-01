@@ -20,15 +20,14 @@ const ReclutamientoForm = ({ isOpen, toggle }) => {
   const handleSubmit = async (e) => {
     e.preventDefault();
     
-    // Asegúrate de que los datos sean del tipo correcto
     const jugador = {
-        nombre: formData.nombre, // String
-        apellido: formData.apellido, // String
-        cedula: formData.cedula, // String
-        edad: parseInt(formData.edad, 10), // Convertir a número
-        posicion: formData.posicion, // String
-        altura: parseInt(formData.altura, 10), // Convertir a número
-        trayectoria: formData.trayectoria // String
+        nombre: formData.nombre,
+        apellido: formData.apellido,
+        cedula: formData.cedula,
+        edad: parseInt(formData.edad, 10), // Asegúrate de que sea un número
+        posicion: formData.posicion,
+        altura: parseInt(formData.altura, 10), // Asegúrate de que sea un número
+        trayectoria: formData.trayectoria
     };
 
     console.log("Datos a enviar:", jugador); // Verifica los datos que se enviarán
@@ -45,10 +44,12 @@ const ReclutamientoForm = ({ isOpen, toggle }) => {
             console.log("Jugador agregado:", jugador);
             toggle(); // Cerrar el modal después de enviar
         } else {
-            console.error("Error al agregar jugador");
+            const errorData = await response.json();
+            console.error("Error al agregar jugador:", errorData);
         }
     } catch (error) {
         console.error("Error de red:", error);
+        console.error("Error al insertar en la base de datos:", error);
     }
   };
 
