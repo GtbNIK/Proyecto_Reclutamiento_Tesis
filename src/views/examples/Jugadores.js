@@ -96,6 +96,7 @@ const Jugadores = () => {
                     <th scope="col">Posición</th>
                     <th scope="col">Trayectoria</th>
                     <th scope="col">Referencia</th>
+                    <th scope="col">Valoración</th>
                   </tr>
                 </thead>
                 <tbody>
@@ -122,6 +123,7 @@ const Jugadores = () => {
                           {player.referencia}
                         </div>
                       </td>
+                      <td>{player.valoracion}</td>
                     </tr>
                   ))}
                 </tbody>

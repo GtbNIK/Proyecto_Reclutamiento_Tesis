@@ -28,6 +28,7 @@ import Admin from "layouts/Admin.js";
 import Auth from "layouts/Auth.js";
 import LandingPage from "views/LandingPage.jsx";
 import Jugadores from "views/examples/Jugadores.js";
+import Sesiones from "views/examples/Sesiones";
 
 // Rutas para el sidebar y navegación interna
 const routes = [
@@ -64,6 +65,13 @@ const routes = [
     name: "Jugadores",
     icon: "ni ni-single-02 text-yellow",
     component: Jugadores,  // Usa el nuevo componente aquí
+    layout: "/admin"
+  },
+  {
+    path: "/sesiones",
+    name: "Sesiones",
+    icon: "ni ni-calendar-grid-58 text-blue",
+    component: Sesiones,
     layout: "/admin"
   }
 ];
