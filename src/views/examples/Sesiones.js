@@ -90,6 +90,15 @@ const Sesiones = () => {
     return intentados > 0 ? Math.round((completados / intentados) * 100) : 0;
   };
 
+  // Función para validar porcentajes
+  const validarPorcentaje = (porcentaje) => {
+    if (porcentaje > 100) {
+      alert("El porcentaje no puede ser mayor a 100%. Por favor, ajusta los valores ingresados.");
+      return false;
+    }
+    return true;
+  };
+
   // Guarda los datos de la estadística editada
   const handleSaveStats = () => {
     setSesiones(prevSesiones =>
@@ -113,13 +122,18 @@ const Sesiones = () => {
     const value = parseInt(e.target.value) || 0;
     setSelectedPlayer(prev => {
       const newPases = { ...prev.pases, [field]: value };
-      return {
-        ...prev,
-        pases: {
-          ...newPases,
-          efectividad: calcularEfectividadPases(newPases.completados, newPases.intentados)
-        }
-      };
+      const efectividad = calcularEfectividadPases(newPases.completados, newPases.intentados);
+      
+      if (validarPorcentaje(efectividad)) {
+        return {
+          ...prev,
+          pases: {
+            ...newPases,
+            efectividad
+          }
+        };
+      }
+      return prev; // No actualiza si el porcentaje es inválido
     });
   };
 
@@ -128,14 +142,18 @@ const Sesiones = () => {
     setSelectedPlayer(prev => {
       const newTiros = { ...prev.tiros, [field]: value };
       const { precision, xG } = calcularPrecisionTiros(newTiros.alArco, newTiros.total);
-      return {
-        ...prev,
-        tiros: {
-          ...newTiros,
-          precision,
-          xG
-        }
-      };
+      
+      if (validarPorcentaje(precision)) {
+        return {
+          ...prev,
+          tiros: {
+            ...newTiros,
+            precision,
+            xG
+          }
+        };
+      }
+      return prev; // No actualiza si el porcentaje es inválido
     });
   };
 
@@ -143,13 +161,18 @@ const Sesiones = () => {
     const value = parseInt(e.target.value) || 0;
     setSelectedPlayer(prev => {
       const newDuelos = { ...prev.duelos, [field]: value };
-      return {
-        ...prev,
-        duelos: {
-          ...newDuelos,
-          porcentaje: calcularPorcentajeDuelos(newDuelos.ganados, newDuelos.total)
-        }
-      };
+      const nuevoPorcentaje = calcularPorcentajeDuelos(newDuelos.ganados, newDuelos.total);
+      
+      if (validarPorcentaje(nuevoPorcentaje)) {
+        return {
+          ...prev,
+          duelos: {
+            ...newDuelos,
+            porcentaje: nuevoPorcentaje
+          }
+        };
+      }
+      return prev; // No actualiza si el porcentaje es inválido
     });
   };
 
@@ -157,13 +180,18 @@ const Sesiones = () => {
     const value = parseInt(e.target.value) || 0;
     setSelectedPlayer(prev => {
       const newCentros = { ...prev.centros, [field]: value };
-      return {
-        ...prev,
-        centros: {
-          ...newCentros,
-          precision: calcularPrecisionCentros(newCentros.completados, newCentros.intentados)
-        }
-      };
+      const precision = calcularPrecisionCentros(newCentros.completados, newCentros.intentados);
+      
+      if (validarPorcentaje(precision)) {
+        return {
+          ...prev,
+          centros: {
+            ...newCentros,
+            precision
+          }
+        };
+      }
+      return prev; // No actualiza si el porcentaje es inválido
     });
   };
 
@@ -209,6 +237,33 @@ const Sesiones = () => {
     setSesiones(prevSesiones => prevSesiones.filter(sesion => sesion.id !== sesionAEliminar));
     setModalConfirmacionOpen(false);
     setSesionAEliminar(null);
+  };
+
+  // Función para agregar una nueva sesión
+  const agregarNuevaSesion = () => {
+    const nuevaSesion = {
+      id: sesiones.length + 1, // Asigna un nuevo ID
+      titulo: `Sesión ${sesiones.length + 1}`, // Título por defecto
+      tipo: "ofensiva",
+      jugadores: Object.keys(jugadoresReclutados).map(cedula => ({
+        cedula,
+        nombre: jugadoresReclutados[cedula].nombre,
+        apellido: jugadoresReclutados[cedula].apellido,
+        // Estadísticas básicas
+        goles: 0,
+        asistencias: 0,
+        // Estadísticas avanzadas
+        pases: { completados: 0, intentados: 0, efectividad: 0 },
+        tiros: { alArco: 0, total: 0, precision: 0, xG: 0 },
+        duelos: { ganados: 0, total: 0, porcentaje: 0 },
+        posesion: { recuperaciones: 0, perdidas: 0 },
+        centros: { completados: 0, intentados: 0, precision: 0 },
+        intercepciones: 0,
+        bloqueos: 0
+      }))
+    };
+
+    setSesiones(prevSesiones => [...prevSesiones, nuevaSesion]);
   };
 
   return (
@@ -266,8 +321,8 @@ const Sesiones = () => {
                   <thead className="thead-light">
                     <tr>
                       <th scope="col">Jugador</th>
-                      <th scope="col">Goles</th>
-                      <th scope="col">Asistencias</th>
+                          <th scope="col">Goles</th>
+                          <th scope="col">Asistencias</th>
                       <th scope="col">Efectividad de Pases</th>
                       <th scope="col">Precisión de Tiros (xG)</th>
                       <th scope="col">Duelos Ganados</th>
@@ -313,6 +368,7 @@ const Sesiones = () => {
                               value={jugador.pases.efectividad}
                               color={jugador.pases.efectividad > 80 ? 'success' : 
                                     jugador.pases.efectividad > 60 ? 'info' : 'warning'}
+                              style={{ height: '23px' }}
                             >
                               {jugador.pases.efectividad}%
                             </Progress>
@@ -330,6 +386,7 @@ const Sesiones = () => {
                               value={jugador.tiros.precision}
                               color={jugador.tiros.precision > 50 ? 'success' : 
                                     jugador.tiros.precision > 30 ? 'info' : 'warning'}
+                              style={{ height: '23px' }}
                             >
                               {jugador.tiros.precision}%
                             </Progress>
@@ -347,6 +404,7 @@ const Sesiones = () => {
                               value={jugador.duelos.porcentaje}
                               color={jugador.duelos.porcentaje > 60 ? 'success' : 
                                     jugador.duelos.porcentaje > 40 ? 'info' : 'warning'}
+                              style={{ height: '23px' }}
                             >
                               {jugador.duelos.porcentaje}%
                             </Progress>
@@ -375,6 +433,7 @@ const Sesiones = () => {
                               value={jugador.centros.precision}
                               color={jugador.centros.precision > 40 ? 'success' : 
                                     jugador.centros.precision > 20 ? 'info' : 'warning'}
+                              style={{ height: '23px' }}
                             >
                               {jugador.centros.precision}%
                             </Progress>
@@ -400,6 +459,15 @@ const Sesiones = () => {
             </Col>
           </Row>
         ))}
+
+        {/* Botón para agregar nueva sesión */}
+        <Row>
+          <Col className="text-center">
+            <Button color="primary" onClick={agregarNuevaSesion}>
+              Agregar Nueva Sesión
+            </Button>
+          </Col>
+        </Row>
 
         {/* Modal para editar estadísticas */}
         <Modal
@@ -631,8 +699,27 @@ const Sesiones = () => {
           </ModalFooter>
         </Modal>
 
-        {/* Resto de los modales y componentes permanecen igual */}
-        {/* ... */}
+        {/* Modal de confirmación para eliminar sesión */}
+        <Modal
+          isOpen={modalConfirmacionOpen}
+          toggle={() => setModalConfirmacionOpen(false)}
+          className="modal-dialog-centered"
+        >
+          <ModalHeader toggle={() => setModalConfirmacionOpen(false)}>
+            Confirmar Eliminación
+          </ModalHeader>
+          <ModalBody>
+            ¿Estás seguro de que deseas eliminar esta sesión?
+          </ModalBody>
+          <ModalFooter>
+            <Button color="danger" onClick={eliminarSesion}>
+              Eliminar
+            </Button>
+            <Button color="secondary" onClick={() => setModalConfirmacionOpen(false)}>
+              Cancelar
+            </Button>
+          </ModalFooter>
+        </Modal>
       </Container>
     </>
   );
