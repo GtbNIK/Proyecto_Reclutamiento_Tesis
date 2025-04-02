@@ -29,11 +29,14 @@ import { useJugadores } from "../../context/JugadoresContext";
 const Sesiones = () => {
   const { jugadoresReclutados } = useJugadores();
   const [modalOpen, setModalOpen] = useState(false);
+  const [modalConfirmacionOpen, setModalConfirmacionOpen] = useState(false);
+  const [sesionAEliminar, setSesionAEliminar] = useState(null);
   const [selectedPlayer, setSelectedPlayer] = useState(null);
   const [sesiones, setSesiones] = useState([
     {
       id: 1,
       titulo: "Sesión Ofensiva",
+      tipo: "ofensiva",
       jugadores: Object.keys(jugadoresReclutados).map(cedula => ({
         cedula,
         nombre: jugadoresReclutados[cedula].nombre,
@@ -47,6 +50,7 @@ const Sesiones = () => {
     {
       id: 2,
       titulo: "Sesión Defensiva",
+      tipo: "defensiva",
       jugadores: Object.keys(jugadoresReclutados).map(cedula => ({
         cedula,
         nombre: jugadoresReclutados[cedula].nombre,
@@ -60,6 +64,7 @@ const Sesiones = () => {
   ]);
   const [editandoTitulo, setEditandoTitulo] = useState(null);
   const [nuevoTitulo, setNuevoTitulo] = useState("");
+  const [nuevoTipoSesion, setNuevoTipoSesion] = useState("ofensiva");
 
   const handlePlayerClick = (sesionId, jugador) => {
     setSelectedPlayer({ ...jugador, sesionId });
@@ -94,6 +99,45 @@ const Sesiones = () => {
       )
     );
     setEditandoTitulo(null);
+  };
+
+  const agregarSesion = () => {
+    const nuevoId = Math.max(...sesiones.map(s => s.id)) + 1;
+    const esOfensiva = nuevoTipoSesion === "ofensiva";
+    
+    const nuevaSesion = {
+      id: nuevoId,
+      titulo: esOfensiva ? "Nueva Sesión Ofensiva" : "Nueva Sesión Defensiva",
+      tipo: nuevoTipoSesion,
+      jugadores: Object.keys(jugadoresReclutados).map(cedula => ({
+        cedula,
+        nombre: jugadoresReclutados[cedula].nombre,
+        apellido: jugadoresReclutados[cedula].apellido,
+        ...(esOfensiva ? {
+          goles: 0,
+          asistencias: 0,
+          pasesCompletados: 0,
+          recuperaciones: 0
+        } : {
+          entradas: 0,
+          intercepciones: 0,
+          despejes: 0,
+          faltas: 0
+        })
+      }))
+    };
+
+    setSesiones([...sesiones, nuevaSesion]);
+  };
+
+  const confirmarEliminacion = (sesionId) => {
+    setSesionAEliminar(sesionId);
+    setModalConfirmacionOpen(true);
+  };
+
+  const eliminarSesion = () => {
+    setSesiones(sesiones.filter(sesion => sesion.id !== sesionAEliminar));
+    setModalConfirmacionOpen(false);
   };
 
   return (
@@ -133,8 +177,16 @@ const Sesiones = () => {
                         color="success"
                         size="sm"
                         onClick={() => iniciarEdicionTitulo(sesion.id, sesion.titulo)}
+                        className="mr-2"
                       >
                         Cambiar Título
+                      </Button>
+                      <Button
+                        color="danger"
+                        size="sm"
+                        onClick={() => confirmarEliminacion(sesion.id)}
+                      >
+                        Eliminar Sesión
                       </Button>
                     </Col>
                   </Row>
@@ -143,7 +195,7 @@ const Sesiones = () => {
                   <thead className="thead-light">
                     <tr>
                       <th scope="col">Jugador</th>
-                      {sesion.id === 1 ? (
+                      {sesion.tipo === "ofensiva" ? (
                         <>
                           <th scope="col">Goles</th>
                           <th scope="col">Asistencias</th>
@@ -168,7 +220,7 @@ const Sesiones = () => {
                         onClick={() => handlePlayerClick(sesion.id, jugador)}
                       >
                         <td>{`${jugador.nombre} ${jugador.apellido}`}</td>
-                        {sesion.id === 1 ? (
+                        {sesion.tipo === "ofensiva" ? (
                           <>
                             <td><Badge color="success" style={{ fontSize: '1rem' }}>{jugador.goles}</Badge></td>
                             <td><Badge color="info" style={{ fontSize: '1rem' }}>{jugador.asistencias}</Badge></td>
@@ -192,6 +244,39 @@ const Sesiones = () => {
           </Row>
         ))}
 
+        {/* Botón para agregar nueva sesión */}
+        <Row className="mb-5">
+          <Col>
+            <Card className="shadow">
+              <CardBody>
+                <Row className="align-items-center">
+                  <Col md="4">
+                    <FormGroup>
+                      <Label>Tipo de Sesión</Label>
+                      <Input
+                        type="select"
+                        value={nuevoTipoSesion}
+                        onChange={(e) => setNuevoTipoSesion(e.target.value)}
+                      >
+                        <option value="ofensiva">Ofensiva</option>
+                        <option value="defensiva">Defensiva</option>
+                      </Input>
+                    </FormGroup>
+                  </Col>
+                  <Col md="8" className="text-right">
+                    <Button
+                      color="primary"
+                      onClick={agregarSesion}
+                    >
+                      Agregar Sesión
+                    </Button>
+                  </Col>
+                </Row>
+              </CardBody>
+            </Card>
+          </Col>
+        </Row>
+
         {/* Modal para editar estadísticas */}
         <Modal
           isOpen={modalOpen}
@@ -204,7 +289,7 @@ const Sesiones = () => {
           <ModalBody>
             {selectedPlayer && (
               <Row>
-                {selectedPlayer.sesionId === 1 ? (
+                {sesiones.find(s => s.id === selectedPlayer.sesionId)?.tipo === "ofensiva" ? (
                   <>
                     <Col md="6">
                       <FormGroup>
@@ -324,6 +409,28 @@ const Sesiones = () => {
             </Button>
             <Button color="secondary" onClick={() => setModalOpen(false)}>
               Cerrar
+            </Button>
+          </ModalFooter>
+        </Modal>
+
+        {/* Modal de confirmación para eliminar sesión */}
+        <Modal
+          isOpen={modalConfirmacionOpen}
+          toggle={() => setModalConfirmacionOpen(false)}
+          className="modal-dialog-centered"
+        >
+          <ModalHeader toggle={() => setModalConfirmacionOpen(false)}>
+            Confirmar Eliminación
+          </ModalHeader>
+          <ModalBody>
+            ¿Estás seguro que deseas eliminar esta sesión? Esta acción no se puede deshacer.
+          </ModalBody>
+          <ModalFooter>
+            <Button color="danger" onClick={eliminarSesion}>
+              Eliminar
+            </Button>
+            <Button color="secondary" onClick={() => setModalConfirmacionOpen(false)}>
+              Cancelar
             </Button>
           </ModalFooter>
         </Modal>
