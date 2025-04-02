@@ -70,7 +70,7 @@ const Jugadores = () => {
                       </InputGroupText>
                     </InputGroupAddon>
                     <Input
-                      placeholder="Buscar jugador..."
+                      placeholder="Buscar por nombre o cédula..."
                       value={searchTerm}
                       onChange={(e) => setSearchTerm(e.target.value)}
                     />

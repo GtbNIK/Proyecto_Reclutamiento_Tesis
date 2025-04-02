@@ -65,7 +65,7 @@ const routes = [
     icon: "ni ni-single-02 text-yellow",
     component: Jugadores,  // Usa el nuevo componente aquí
     layout: "/admin"
-  },
+  }
 ];
 
 // Componente principal para el enrutamiento

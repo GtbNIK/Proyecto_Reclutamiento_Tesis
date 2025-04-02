@@ -63,11 +63,11 @@ const hoverStyles = `
 
 const Tables = () => {
   const [modalOpen, setModalOpen] = useState(false);
-  const { agregarJugadores } = useJugadores();
   const [selectedPlayer, setSelectedPlayer] = useState(null);
+  const { agregarJugadores } = useJugadores();
+  const [searchTerm, setSearchTerm] = useState("");
   const [deleteModalOpen, setDeleteModalOpen] = useState(false);
   const [playerToDelete, setPlayerToDelete] = useState(null); // Almacenará la cédula del jugador a eliminar
-  const [searchTerm, setSearchTerm] = useState("");
   const [players, setPlayers] = useState({
     "V-25.789.456": {
       nombre: "Juan",
@@ -131,6 +131,17 @@ const Tables = () => {
     }));
   };
 
+  const handleDeletePlayer = () => {
+    if (playerToDelete) {
+      setPlayers(prevPlayers => {
+        const updatedPlayers = { ...prevPlayers };
+        delete updatedPlayers[playerToDelete]; // Elimina al jugador
+        return updatedPlayers;
+      });
+      setDeleteModalOpen(false); // Cierra el modal
+    }
+  };
+
   // Función para manejar el descarte de un jugador
   const handleDiscard = (cedula) => {
     setPlayers(prevPlayers => ({
@@ -153,16 +164,6 @@ const Tables = () => {
     }));
   };
 
-  const handleDeletePlayer = () => {
-    if (playerToDelete) {
-      setPlayers(prevPlayers => {
-        const updatedPlayers = { ...prevPlayers };
-        delete updatedPlayers[playerToDelete]; // Elimina al jugador
-        return updatedPlayers;
-      });
-      setDeleteModalOpen(false); // Cierra el modal
-    }
-  };
   // Efecto para filtrar jugadores cuando cambia el término de búsqueda
   const [filteredPlayers, setFilteredPlayers] = useState({
     solicitudes: [],
@@ -188,8 +189,8 @@ const Tables = () => {
     setModalOpen(true);
   };
 
-  // Función para confirmar la pre-selección
   const handleConfirmPreSelection = () => {
+    // Obtener todos los jugadores aprobados
     const jugadoresAprobados = Object.fromEntries(
       Object.entries(players).filter(([_, player]) => player.estado === "aprobado")
     );
@@ -197,7 +198,7 @@ const Tables = () => {
     // Agregar a jugadores reclutados
     agregarJugadores(jugadoresAprobados);
     
-    // Eliminar de la lista actual
+    // Eliminar PERMANENTEMENTE de la lista actual
     setPlayers(prevPlayers => {
       const updatedPlayers = { ...prevPlayers };
       Object.keys(jugadoresAprobados).forEach(cedula => {
@@ -222,6 +223,8 @@ const Tables = () => {
       },
     }));
   };
+
+  
 
   return (
     <>
@@ -316,17 +319,17 @@ const Tables = () => {
                               <i className="fas fa-check" />
                             </Button>
                             <Button
-  color="danger"
-  size="lg"
-  onClick={(e) => {
-    e.preventDefault();
-    e.stopPropagation();
-    setPlayerToDelete(cedula); // Guarda la cédula del jugador a eliminar
-    setDeleteModalOpen(true); // Abre el modal
-  }}
->
-  <i className="fas fa-times" />
-</Button>
+                              color="danger"
+                              size="lg"
+                              onClick={(e) => {
+                                e.preventDefault();
+                                e.stopPropagation();
+                                setPlayerToDelete(cedula); // Guarda la cédula del jugador a eliminar
+                                setDeleteModalOpen(true); // Abre el modal
+                              }}
+                            >
+                              <i className="fas fa-times" />
+                            </Button>
                           </>
                         ) : player.estado === "descartado" ? (
                           <Button
@@ -400,7 +403,7 @@ const Tables = () => {
               <Button
                 color="primary"
                 onClick={() => setConfirmModalOpen(true)}
-                style={{ backgroundColor: '#02B911', borderColor: '#02B911' }}
+                style={{ backgroundColor: '#02B911', borderColor: '#02B911' }} // Verde personalizado
               >
                 Confirmar Pre-selección
               </Button>
@@ -422,7 +425,7 @@ const Tables = () => {
           </ModalBody>
           <ModalFooter>
           <Button 
-            color="primary" 
+            color="primary"
             onClick={handleConfirmPreSelection}
             style={{ backgroundColor: '#02B911', borderColor: '#02B911' }} // Verde personalizado
           >
@@ -433,25 +436,26 @@ const Tables = () => {
         </Modal>
 
         <Modal
-          className="modal-dialog-centered"
-          isOpen={deleteModalOpen}
-          toggle={() => setDeleteModalOpen(false)}
-        >
-          <ModalHeader toggle={() => setDeleteModalOpen(false)}>
-            Confirmar Eliminación
-          </ModalHeader>
-          <ModalBody>
-            ¿Está seguro de que desea eliminar permanentemente a este jugador?
-          </ModalBody>
-          <ModalFooter>
-            <Button color="danger" onClick={handleDeletePlayer}>
-              Sí, Eliminar
-            </Button>
-            <Button color="secondary" onClick={() => setDeleteModalOpen(false)}>
-              Cancelar
-            </Button>
-          </ModalFooter>
-        </Modal>
+  className="modal-dialog-centered"
+  isOpen={deleteModalOpen}
+  toggle={() => setDeleteModalOpen(false)}
+>
+  <ModalHeader toggle={() => setDeleteModalOpen(false)}>
+    Confirmar Eliminación
+  </ModalHeader>
+  <ModalBody>
+    ¿Está seguro de que desea eliminar permanentemente a este jugador?
+  </ModalBody>
+  <ModalFooter>
+    <Button color="danger" onClick={handleDeletePlayer}>
+      Sí, Eliminar
+    </Button>
+    <Button color="secondary" onClick={() => setDeleteModalOpen(false)}>
+      Cancelar
+    </Button>
+  </ModalFooter>
+</Modal>
+
         {/* Modal de Información del Jugador */}
         <Modal
           className="modal-dialog-centered modal-lg"
