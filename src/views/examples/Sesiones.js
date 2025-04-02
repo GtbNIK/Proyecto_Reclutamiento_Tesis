@@ -36,7 +36,8 @@ const Sesiones = () => {
   const [sesiones, setSesiones] = useState([
     {
       id: 1,
-      titulo: "Sesión Ofensiva Avanzada",
+      titulo: "Sesión 1",
+      fecha: new Date().toISOString().split('T')[0], // Agregar fecha por defecto
       tipo: "ofensiva",
       jugadores: Object.keys(jugadoresReclutados).map(cedula => ({
         cedula,
@@ -59,6 +60,7 @@ const Sesiones = () => {
   const [editandoTitulo, setEditandoTitulo] = useState(null);
   const [nuevoTitulo, setNuevoTitulo] = useState("");
   const [nuevoTipoSesion, setNuevoTipoSesion] = useState("ofensiva");
+  const [nuevaFecha, setNuevaFecha] = useState(""); // Estado para la nueva fecha
 
   // Abre el modal para editar una estadística específica
   const handleStatClick = (sesionId, jugador, statName) => {
@@ -214,6 +216,13 @@ const Sesiones = () => {
     }));
   };
 
+  const formatDate = (dateString) => {
+    if (!dateString) return '';
+    const [year, month, day] = dateString.split('-');
+    // Formato DD-MM-YY (últimos 2 dígitos del año)
+    return `${day}-${month}-${year.slice(-2)}`;
+  };
+
   const iniciarEdicionTitulo = (sesionId, tituloActual) => {
     setEditandoTitulo(sesionId);
     setNuevoTitulo(tituloActual);
@@ -222,7 +231,7 @@ const Sesiones = () => {
   const guardarTitulo = (sesionId) => {
     setSesiones(prevSesiones =>
       prevSesiones.map(sesion =>
-        sesion.id === sesionId ? { ...sesion, titulo: nuevoTitulo } : sesion
+        sesion.id === sesionId ? { ...sesion, titulo: nuevoTitulo, fecha: nuevaFecha || sesion.fecha } : sesion
       )
     );
     setEditandoTitulo(null);
@@ -285,28 +294,50 @@ const Sesiones = () => {
                   <Row className="align-items-center">
                     <Col>
                       {editandoTitulo === sesion.id ? (
-                        <Input
-                          type="text"
-                          value={nuevoTitulo}
-                          onChange={(e) => setNuevoTitulo(e.target.value)}
-                          onBlur={() => guardarTitulo(sesion.id)}
-                          autoFocus
-                        />
+                        <>
+                          <Input
+                            type="text"
+                            value={nuevoTitulo}
+                            onChange={(e) => setNuevoTitulo(e.target.value)}
+                            onKeyDown={(e) => {
+                              if (e.key === 'Enter') {
+                                guardarTitulo(sesion.id);
+                              }
+                            }}
+                            autoFocus
+                          />
+                          <Input
+                            type="date"
+                            value={nuevaFecha || sesion.fecha}
+                            onChange={(e) => setNuevaFecha(e.target.value)}
+                          />
+                        </>
                       ) : (
                         <h3 className="mb-0" onClick={() => iniciarEdicionTitulo(sesion.id, sesion.titulo)}>
-                          {sesion.titulo}
+                          {sesion.titulo} - {formatDate(sesion.fecha)} {/* Mostrar la fecha */}
                         </h3>
                       )}
                     </Col>
                     <Col className="text-right">
-                      <Button
-                        color="success"
-                        size="sm"
-                        onClick={() => iniciarEdicionTitulo(sesion.id, sesion.titulo)}
-                        className="mr-2"
-                      >
-                        Cambiar Título
-                      </Button>
+                      {editandoTitulo === sesion.id ? (
+                        <Button
+                          color="success"
+                          size="sm"
+                          onClick={() => guardarTitulo(sesion.id)}
+                          className="mr-2"
+                        >
+                          Confirmar Cambios
+                        </Button>
+                      ) : (
+                        <Button
+                          color="success"
+                          size="sm"
+                          onClick={() => iniciarEdicionTitulo(sesion.id, sesion.titulo)}
+                          className="mr-2"
+                        >
+                          Cambiar Título
+                        </Button>
+                      )}
                       <Button
                         color="danger"
                         size="sm"
