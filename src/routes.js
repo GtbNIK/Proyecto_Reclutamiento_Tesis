@@ -27,6 +27,7 @@ import Icons from "views/examples/Icons.js";
 import Admin from "layouts/Admin.js";
 import Auth from "layouts/Auth.js";
 import LandingPage from "views/LandingPage.jsx";
+import Jugadores from "views/examples/Jugadores.js";
 
 // Rutas para el sidebar y navegación interna
 const routes = [
@@ -57,7 +58,14 @@ const routes = [
     icon: "ni ni-bullet-list-67 text-red",
     component: Tables,
     layout: "/admin"
-  }
+  },
+  {
+    path: "/jugadores",
+    name: "Jugadores",
+    icon: "ni ni-single-02 text-yellow",
+    component: Jugadores,  // Usa el nuevo componente aquí
+    layout: "/admin"
+  },
 ];
 
 // Componente principal para el enrutamiento

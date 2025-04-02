@@ -70,7 +70,7 @@ const Jugadores = () => {
                       </InputGroupText>
                     </InputGroupAddon>
                     <Input
-                      placeholder="Buscar por nombre o cédula...."
+                      placeholder="Buscar jugador..."
                       value={searchTerm}
                       onChange={(e) => setSearchTerm(e.target.value)}
                     />
@@ -178,7 +178,9 @@ const Jugadores = () => {
             )}
           </ModalBody>
           <ModalFooter>
-            <Button color="danger" onClick={() => setModalOpen(false)}>Cerrar</Button>
+            <Button color="secondary" onClick={() => setModalOpen(false)}>
+              Cerrar
+            </Button>
           </ModalFooter>
         </Modal>
       </Container>
