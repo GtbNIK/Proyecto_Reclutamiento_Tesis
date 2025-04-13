@@ -17,7 +17,7 @@
 */
 /*eslint-disable*/
 import { useState } from "react";
-import { NavLink as NavLinkRRD, Link, useNavigate } from "react-router-dom";
+import { NavLink as NavLinkRRD, Link } from "react-router-dom";
 // nodejs library to set properties for components
 import { PropTypes } from "prop-types";
 
@@ -50,18 +50,12 @@ import {
   Container,
   Row,
   Col,
-  Modal,
-  ModalHeader,
-  ModalBody,
-  ModalFooter,
 } from "reactstrap";
 
 var ps;
 
 const Sidebar = (props) => {
   const [collapseOpen, setCollapseOpen] = useState();
-  const [logoutModalOpen, setLogoutModalOpen] = useState(false);
-  const navigate = useNavigate();
   // verifies if routeName is the one active (in browser input)
   const activeRoute = (routeName) => {
     return props.location.pathname.indexOf(routeName) > -1 ? "active" : "";
@@ -105,12 +99,6 @@ const Sidebar = (props) => {
       target: "_blank",
     };
   }
-
-  const handleLogout = () => {
-    setLogoutModalOpen(false);
-    // Aquí puedes agregar la lógica para cerrar sesión si es necesario
-    navigate("/"); // Redirigir a la landing page
-  };
 
   return (
     <Navbar
@@ -186,11 +174,6 @@ const Sidebar = (props) => {
                 <i className="ni ni-support-16" />
                 <span>Support</span>
               </DropdownItem>
-              <DropdownItem divider />
-              <DropdownItem href="#pablo" onClick={() => setLogoutModalOpen(true)}>
-                <i className="ni ni-user-run" />
-                <span>Logout</span>
-              </DropdownItem>
             </DropdownMenu>
           </UncontrolledDropdown>
         </Nav>
@@ -251,35 +234,8 @@ const Sidebar = (props) => {
           </Nav>
           {/* Divider */}
           <hr className="my-3" />
-
-          {/* Botón de Cerrar Sesión al final */}
-          <NavItem>
-            <NavLink
-              href="#pablo"
-              onClick={() => setLogoutModalOpen(true)}
-            >
-              <i className="ni ni-user-run" />
-              Cerrar Sesión
-            </NavLink>
-          </NavItem>
         </Collapse>
       </Container>
-      <Modal
-        className="modal-dialog-centered"
-        isOpen={logoutModalOpen}
-        toggle={() => setLogoutModalOpen(false)}
-      >
-        <ModalHeader toggle={() => setLogoutModalOpen(false)}>
-          Confirmar Cierre de Sesión
-        </ModalHeader>
-        <ModalBody>
-          ¿Está seguro de que desea cerrar sesión?
-        </ModalBody>
-        <ModalFooter>
-          <Button color="primary" onClick={handleLogout}>Sí</Button>
-          <Button color="secondary" onClick={() => setLogoutModalOpen(false)}>No</Button>
-        </ModalFooter>
-      </Modal>
     </Navbar>
   );
 };

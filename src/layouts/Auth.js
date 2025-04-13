@@ -24,7 +24,7 @@ import { Container, Row, Col } from "reactstrap";
 import AuthNavbar from "components/Navbars/AuthNavbar.js";
 import AuthFooter from "components/Footers/AuthFooter.js";
 
-import routes from "routes.js";
+import { routes } from "routes.js";
 
 const Auth = (props) => {
   const mainContent = React.useRef(null);
@@ -46,7 +46,11 @@ const Auth = (props) => {
     return routes.map((prop, key) => {
       if (prop.layout === "/auth") {
         return (
-          <Route path={prop.path} element={prop.component} key={key} exact />
+          <Route 
+            path={prop.path} 
+            element={<prop.component />} 
+            key={key} 
+          />
         );
       } else {
         return null;

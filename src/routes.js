@@ -19,11 +19,8 @@ import React, { useState } from "react";
 import { Navigate, Route, Routes, useNavigate } from "react-router-dom";
 import Index from "views/Index.js";
 import Profile from "views/examples/Profile.js";
-import Maps from "views/examples/Maps.js";
-import Register from "views/examples/Register.js";
 import Login from "views/examples/Login.js";
 import Tables from "views/examples/Tables.js";
-import Icons from "views/examples/Icons.js";
 import Admin from "layouts/Admin.js";
 import Auth from "layouts/Auth.js";
 import LandingPage from "views/LandingPage.jsx";
@@ -32,6 +29,13 @@ import Sesiones from "views/examples/Sesiones";
 
 // Rutas para el sidebar y navegación interna
 const routes = [
+  {
+    path: "/login",
+    name: "Login",
+    icon: "ni ni-key-25 text-info",
+    component: Login,
+    layout: "/auth"
+  },
   {
     path: "/principal",
     name: "Principal",
@@ -73,7 +77,7 @@ const routes = [
     icon: "ni ni-calendar-grid-58 text-blue",
     component: Sesiones,
     layout: "/admin"
-  }
+  },
 ];
 
 // Componente principal para el enrutamiento

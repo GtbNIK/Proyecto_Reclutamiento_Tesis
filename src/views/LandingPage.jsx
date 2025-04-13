@@ -27,7 +27,7 @@ const LandingPage = () => {
         <div className="logo">
           <img src={require("assets/img/brand/logo.png")} alt="Logo" />
         </div>
-        <Link to="/admin/login">
+        <Link to="/auth/login">
           <Button color="primary" className="login-button">
             Log-In
           </Button>
