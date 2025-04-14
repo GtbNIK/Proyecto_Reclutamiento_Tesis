@@ -29,7 +29,7 @@ const LandingPage = () => {
         </div>
         <Link to="/auth/login">
           <Button color="primary" className="login-button">
-            Log-In
+            Iniciar Sesión
           </Button>
         </Link>
       </header>

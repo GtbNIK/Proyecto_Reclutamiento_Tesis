@@ -31,13 +31,13 @@
   --gray-dark: #32325d;
   --light: #ced4da;
   --lighter: #e9ecef;
-  --primary: #5e72e4;
+  --primary: #01920D;
   --secondary: #f7fafc;
   --success: #2dce89;
   --info: #11cdef;
   --warning: #fb6340;
   --danger: #f5365c;
-  --light: #adb5bd;
+  --light: #ECF1FB;
   --dark: #212529;
   --default: #172b4d;
   --white: #fff;
@@ -6844,7 +6844,7 @@ button.bg-dark:focus {
 }
 
 .bg-default {
-  background-color: #172b4d !important;
+  background-color: var(--secondary) !important;
 }
 
 a.bg-default:hover,
@@ -14318,7 +14318,7 @@ button.bg-lighter:focus {
 }
 
 .bg-gradient-info {
-  background: linear-gradient(87deg, #11cdef 0, #1171ef 100%) !important;
+  background: linear-gradient(87deg, #01920D 0, #01920D 100%) !important;
 }
 
 .bg-gradient-warning {

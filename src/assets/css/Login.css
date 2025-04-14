@@ -1,0 +1,7 @@
+.btnlogin-hover {
+    transition: transform 0.2s; /* Transición suave */
+  }
+  
+  .btnlogin-hover:hover {
+    transform: scale(1.1); /* Aumenta el tamaño al 110% */
+  }

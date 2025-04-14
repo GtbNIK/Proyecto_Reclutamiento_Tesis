@@ -31,60 +31,58 @@ import {
   Row,
   Col,
   Container,
+  CardFooter,
 } from "reactstrap";
+import React, { useState, useEffect } from "react";
+import { useNavigate } from "react-router-dom";
+import AOS from 'aos';
+import 'aos/dist/aos.css';
 
 const Login = () => {
+  const navigate = useNavigate();
+  const [email, setEmail] = useState("");
+  const [password, setPassword] = useState("");
+  const [error, setError] = useState("");
+
+  useEffect(() => {
+    AOS.init({
+      duration: 1000,
+      once: true
+    });
+  }, []);
+
+  const handleSubmit = (e) => {
+    e.preventDefault();
+    setError("");
+
+    if (!email || !password) {
+      setError("Por favor, completa todos los campos.");
+      return;
+    }
+
+    const emailPattern = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+    if (!emailPattern.test(email)) {
+      setError("Por favor, ingresa un correo válido.");
+      return;
+    }
+
+    navigate("/admin/");
+  };
+
   return (
     <Container className="mt--8 pb-5">
-      <Row className="justify-content-center">
+      <Row className="justify-content-center mt-4">
         <Col lg="5" md="7">
-          <Card className="bg-secondary shadow border-0">
-            <CardHeader className="bg-transparent pb-5">
-              <div className="text-muted text-center mt-2 mb-3">
-                <small>Sign in with</small>
-              </div>
-              <div className="btn-wrapper text-center">
-                <Button
-                  className="btn-neutral btn-icon"
-                  color="default"
-                  href="#pablo"
-                  onClick={(e) => e.preventDefault()}
-                >
-                  <span className="btn-inner--icon">
-                    <img
-                      alt="..."
-                      src={
-                        require("../../assets/img/icons/common/github.svg")
-                          .default
-                      }
-                    />
-                  </span>
-                  <span className="btn-inner--text">Github</span>
-                </Button>
-                <Button
-                  className="btn-neutral btn-icon"
-                  color="default"
-                  href="#pablo"
-                  onClick={(e) => e.preventDefault()}
-                >
-                  <span className="btn-inner--icon">
-                    <img
-                      alt="..."
-                      src={
-                        require("../../assets/img/icons/common/google.svg")
-                          .default
-                      }
-                    />
-                  </span>
-                  <span className="btn-inner--text">Google</span>
-                </Button>
-              </div>
+          <Card className="bg-lighter shadow border-0" data-aos="fade-down">
+            <CardHeader className="bg-transparent pb-3 d-flex align-items-center justify-content-center text-center" style={{ height: '80px' }}>
+              <h1 className="mb-0">Iniciar Sesión</h1>
             </CardHeader>
             <CardBody className="px-lg-5 py-lg-5">
-              <div className="text-center text-muted mb-4">
-                <small>Or sign in with credentials</small>
+              <div className="text-center text-muted mb-3">
+                <medium>Ingresa tus datos e Inicia Sesión</medium>
               </div>
-              <Form role="form">
+              {error && <div className="alert alert-danger">{error}</div>}
+              <Form role="form" onSubmit={handleSubmit}>
                 <FormGroup className="mb-3">
                   <InputGroup className="input-group-alternative">
                     <InputGroupAddon addonType="prepend">
@@ -93,9 +91,11 @@ const Login = () => {
                       </InputGroupText>
                     </InputGroupAddon>
                     <Input
-                      placeholder="Email"
+                      placeholder="Correo"
                       type="email"
                       autoComplete="new-email"
+                      value={email}
+                      onChange={(e) => setEmail(e.target.value)}
                     />
                   </InputGroup>
                 </FormGroup>
@@ -107,53 +107,32 @@ const Login = () => {
                       </InputGroupText>
                     </InputGroupAddon>
                     <Input
-                      placeholder="Password"
+                      placeholder="Contraseña"
                       type="password"
                       autoComplete="new-password"
+                      value={password}
+                      onChange={(e) => setPassword(e.target.value)}
                     />
                   </InputGroup>
                 </FormGroup>
                 <div className="custom-control custom-control-alternative custom-checkbox">
                   <input
                     className="custom-control-input"
-                    id=" customCheckLogin"
+                    id="customCheckLogin"
                     type="checkbox"
                   />
-                  <label
-                    className="custom-control-label"
-                    htmlFor=" customCheckLogin"
-                  >
-                    <span className="text-muted">Remember me</span>
-                  </label>
                 </div>
                 <div className="text-center">
-                  <Button className="my-4" color="primary" type="button">
-                    Sign in
+                  <Button className="my-4" style={{ backgroundColor: '#01920D', color: 'white' }} type="submit">
+                    Iniciar Sesión
                   </Button>
                 </div>
               </Form>
             </CardBody>
+            <CardFooter className="text-center bg-lighter">
+              <img src={require("../../assets/img/brand/logo.png")} alt="Logo" style={{ width: '100px' }} />
+            </CardFooter>
           </Card>
-          <Row className="mt-3">
-            <Col xs="6">
-              <a
-                className="text-light"
-                href="#pablo"
-                onClick={(e) => e.preventDefault()}
-              >
-                <small>Forgot password?</small>
-              </a>
-            </Col>
-            <Col className="text-right" xs="6">
-              <a
-                className="text-light"
-                href="#pablo"
-                onClick={(e) => e.preventDefault()}
-              >
-                <small>Create new account</small>
-              </a>
-            </Col>
-          </Row>
         </Col>
       </Row>
     </Container>

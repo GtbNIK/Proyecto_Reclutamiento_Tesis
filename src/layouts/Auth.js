@@ -31,9 +31,9 @@ const Auth = (props) => {
   const location = useLocation();
 
   React.useEffect(() => {
-    document.body.classList.add("bg-default");
+    document.body.classList.add("bg-white");
     return () => {
-      document.body.classList.remove("bg-default");
+      document.body.classList.remove("bg-white");
     };
   }, []);
   React.useEffect(() => {
@@ -60,17 +60,16 @@ const Auth = (props) => {
 
   return (
     <>
-      <div className="main-content" ref={mainContent}>
+      <div className="main-content mb-5" ref={mainContent}>
         <AuthNavbar />
         <div className="header bg-gradient-info py-7 py-lg-8">
           <Container>
             <div className="header-body text-center mb-7">
               <Row className="justify-content-center">
                 <Col lg="5" md="6">
-                  <h1 className="text-white">Welcome!</h1>
+                  <h1 className="text-white">Bienvenido!</h1>
                   <p className="text-lead text-light">
-                    Use these awesome forms to login or create new account in
-                    your project for free.
+                    Inicia Sesión para obtener acceso al Dashboard de Gestión.
                   </p>
                 </Col>
               </Row>
@@ -86,7 +85,7 @@ const Auth = (props) => {
               y="0"
             >
               <polygon
-                className="fill-default"
+                className="fill-white"
                 points="2560 0 2560 100 0 100"
               />
             </svg>
