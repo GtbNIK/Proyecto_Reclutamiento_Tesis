@@ -30,6 +30,12 @@ const ReclutamientoForm = ({ isOpen, toggle }) => {
 
   const validateField = (name, value) => {
     switch (name) {
+      case 'nombre':
+      case 'apellido':
+        if (!/^[a-zA-ZáéíóúÁÉÍÓÚñÑ\s]*$/.test(value)) {
+          return 'Solo se permiten letras en este campo';
+        }
+        break;
       case 'cedula':
         // Solo números positivos
         if (!/^\d+$/.test(value)) {
@@ -60,6 +66,11 @@ const ReclutamientoForm = ({ isOpen, toggle }) => {
     // Validaciones específicas para cada campo
     if (name === 'cedula' && !/^\d*$/.test(value)) {
       return; // No actualizar si no son números
+    }
+
+    // Validación para nombre y apellido (solo letras y espacios)
+    if ((name === 'nombre' || name === 'apellido') && !/^[a-zA-ZáéíóúÁÉÍÓÚñÑ\s]*$/.test(value)) {
+      return; // No actualizar si contiene números o caracteres especiales
     }
 
     if (name === 'posicion') {
