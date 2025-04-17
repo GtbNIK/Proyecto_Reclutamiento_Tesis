@@ -76,6 +76,20 @@ const Index = (props) => {
   const [horaSesion, setHoraSesion] = useState("");
   const [sesionAEditar, setSesionAEditar] = useState(null);
   const [modal, setModal] = useState(false);
+  const [modalEliminar, setModalEliminar] = useState(false);
+  const [modalNuevaSesion, setModalNuevaSesion] = useState(false);
+  const [sesionAEliminar, setSesionAEliminar] = useState(null);
+  const [nuevaSesion, setNuevaSesion] = useState({
+    titulo: "",
+    fecha: "",
+    hora: ""
+  });
+
+  // Función para obtener la fecha mínima (hoy en formato YYYY-MM-DD)
+  const obtenerFechaMinima = () => {
+    const hoy = new Date();
+    return hoy.toISOString().split('T')[0];
+  };
 
   // Función para calcular los días restantes
   const calcularDiasRestantes = (fecha) => {
@@ -91,21 +105,44 @@ const Index = (props) => {
     return Math.ceil(diferencia / (1000 * 60 * 60 * 24)); // Convertir a días
   };
 
+  const toggleModalNuevaSesion = () => setModalNuevaSesion(!modalNuevaSesion);
+
+  const handleNuevaSesionChange = (e) => {
+    const { name, value } = e.target;
+    setNuevaSesion(prev => ({
+      ...prev,
+      [name]: value
+    }));
+  };
+
   const agregarNuevaSesion = () => {
-    const nuevaSesion = {
+    const sesion = {
       id: proximasSesiones.length + 1,
-      titulo: tituloSesion,
-      fecha: new Date(fechaSesion + 'T00:00:00-04:00').toISOString(), // Ajustar a GMT-4
-      hora: horaSesion,
+      titulo: nuevaSesion.titulo,
+      fecha: new Date(nuevaSesion.fecha + 'T00:00:00-04:00').toISOString(),
+      hora: nuevaSesion.hora
     };
-    setProximasSesiones(prevSesiones => [...prevSesiones, nuevaSesion]);
-    // Limpiar los campos
-    setTituloSesion("");
-    setFechaSesion("");
-    setHoraSesion("");
+    setProximasSesiones(prev => [...prev, sesion]);
+    setNuevaSesion({ titulo: "", fecha: "", hora: "" });
+    toggleModalNuevaSesion();
   };
 
   const toggleModal = () => setModal(!modal);
+
+  const toggleModalEliminar = () => setModalEliminar(!modalEliminar);
+
+  const confirmarEliminarSesion = (id) => {
+    setSesionAEliminar(id);
+    toggleModalEliminar();
+  };
+
+  const eliminarSesion = () => {
+    setProximasSesiones(prevSesiones => 
+      prevSesiones.filter(sesion => sesion.id !== sesionAEliminar)
+    );
+    setSesionAEliminar(null);
+    toggleModalEliminar();
+  };
 
   const editarSesion = (id) => {
     const sesionEditada = proximasSesiones.find(sesion => sesion.id === id);
@@ -247,7 +284,19 @@ const Index = (props) => {
           <Col>
             <Card className="shadow">
               <CardHeader className="border-0">
-                <h3 className="mb-0">Próximas Sesiones</h3>
+                <Row className="align-items-center">
+                  <Col>
+                    <h3 className="mb-0">Próximas Sesiones</h3>
+                  </Col>
+                  <Col className="text-right">
+                    <Button 
+                      style={{ backgroundColor: '#01920D', borderColor: '#01920D', color: 'white' }}
+                      onClick={toggleModalNuevaSesion}
+                    >
+                      Agregar Nueva Sesión
+                    </Button>
+                  </Col>
+                </Row>
               </CardHeader>
               <Table className="align-items-center table-flush" responsive>
                 <thead className="thead-light">
@@ -267,8 +316,11 @@ const Index = (props) => {
                       <td>{sesion.hora}</td>
                       <td>{calcularDiasRestantes(sesion.fecha)}</td>
                       <td>
-                        <Button color="warning" onClick={() => editarSesion(sesion.id)}>
+                        <Button color="warning" onClick={() => editarSesion(sesion.id)} className="mr-2">
                           Editar
+                        </Button>
+                        <Button color="danger" onClick={() => confirmarEliminarSesion(sesion.id)}>
+                          Eliminar
                         </Button>
                       </td>
                     </tr>
@@ -279,14 +331,81 @@ const Index = (props) => {
           </Col>
         </Row>
 
-        {/* Modal para agregar o editar sesión */}
-        <Modal isOpen={modal} toggle={toggleModal}>
-          <ModalHeader toggle={toggleModal}>
-            {sesionAEditar ? "Editar Sesión" : "Agregar Nueva Sesión"}
+        {/* Modal para nueva sesión */}
+        <Modal isOpen={modalNuevaSesion} toggle={toggleModalNuevaSesion}>
+          <ModalHeader toggle={toggleModalNuevaSesion}>
+            Agregar Nueva Sesión
           </ModalHeader>
           <ModalBody>
             <FormGroup>
-              <Label>Título de la Sesión</Label>
+              <Label>Nombre de la Sesión</Label>
+              <Input
+                type="text"
+                name="titulo"
+                value={nuevaSesion.titulo}
+                onChange={handleNuevaSesionChange}
+                placeholder="Ingrese el nombre de la sesión"
+              />
+            </FormGroup>
+            <FormGroup>
+              <Label>Fecha de la Sesión</Label>
+              <Input
+                type="date"
+                name="fecha"
+                value={nuevaSesion.fecha}
+                onChange={handleNuevaSesionChange}
+                min={obtenerFechaMinima()}
+              />
+            </FormGroup>
+            <FormGroup>
+              <Label>Hora de la Sesión</Label>
+              <Input
+                type="time"
+                name="hora"
+                value={nuevaSesion.hora}
+                onChange={handleNuevaSesionChange}
+              />
+            </FormGroup>
+          </ModalBody>
+          <ModalFooter>
+            <Button 
+              style={{ backgroundColor: '#01920D', borderColor: '#01920D', color: 'white' }}
+              onClick={agregarNuevaSesion}
+            >
+              Agregar Sesión
+            </Button>
+            <Button color="secondary" onClick={toggleModalNuevaSesion}>
+              Cancelar
+            </Button>
+          </ModalFooter>
+        </Modal>
+
+        {/* Modal de confirmación para eliminar sesión */}
+        <Modal isOpen={modalEliminar} toggle={toggleModalEliminar}>
+          <ModalHeader toggle={toggleModalEliminar}>
+            Confirmar Eliminación
+          </ModalHeader>
+          <ModalBody>
+            ¿Está seguro que desea eliminar esta sesión? Esta acción no se puede deshacer.
+          </ModalBody>
+          <ModalFooter>
+            <Button color="danger" onClick={eliminarSesion}>
+              Eliminar
+            </Button>
+            <Button color="secondary" onClick={toggleModalEliminar}>
+              Cancelar
+            </Button>
+          </ModalFooter>
+        </Modal>
+
+        {/* Modal para editar sesión */}
+        <Modal isOpen={modal} toggle={toggleModal}>
+          <ModalHeader toggle={toggleModal}>
+            Editar Sesión
+          </ModalHeader>
+          <ModalBody>
+            <FormGroup>
+              <Label>Nombre de la Sesión</Label>
               <Input
                 type="text"
                 value={tituloSesion}
@@ -299,6 +418,7 @@ const Index = (props) => {
                 type="date"
                 value={fechaSesion}
                 onChange={(e) => setFechaSesion(e.target.value)}
+                min={obtenerFechaMinima()}
               />
             </FormGroup>
             <FormGroup>
@@ -311,8 +431,11 @@ const Index = (props) => {
             </FormGroup>
           </ModalBody>
           <ModalFooter>
-            <Button color="primary" onClick={sesionAEditar ? guardarCambios : agregarNuevaSesion}>
-              {sesionAEditar ? "Guardar Cambios" : "Agregar Sesión"}
+            <Button 
+              style={{ backgroundColor: '#01920D', borderColor: '#01920D', color: 'white' }}
+              onClick={guardarCambios}
+            >
+              Guardar Cambios
             </Button>
             <Button color="secondary" onClick={toggleModal}>
               Cancelar
@@ -339,7 +462,7 @@ const Index = (props) => {
                   </div>
                 </Row>
               </CardHeader>
-              <Table className="align-items-center table-flush" responsive>
+              <Table className="align-items-center table-flush" responsive style={{ marginBottom: '50px' }}>
                 <thead className="thead-light">
                   <tr>
                     <th scope="col">Nombre</th>

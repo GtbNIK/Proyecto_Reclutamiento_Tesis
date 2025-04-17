@@ -43,10 +43,10 @@ const AdminNavbar = (props) => {
       <Navbar className="navbar-top navbar-dark" expand="md" id="navbar-main">
         <Container fluid>
           <Link
-            className="h4 mb-0 text-white text-uppercase d-none d-lg-inline-block"
+            className="h4 mb-0 text-white d-none d-lg-inline-block"
             to="/admin/principal"
           >
-            {props.brandText}
+            Principal
           </Link>
           <Nav className="align-items-center" navbar>
             <Button

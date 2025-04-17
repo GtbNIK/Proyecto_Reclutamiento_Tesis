@@ -24,18 +24,68 @@ import {
   InputGroup,
   InputGroupAddon,
   InputGroupText,
-  Input
+  Input,
+  Label
 } from "reactstrap";
 import { useJugadores } from "../../context/JugadoresContext"; // Importamos el hook del contexto
 
 const Jugadores = () => {
-  const { jugadoresReclutados } = useJugadores(); // Obtenemos los jugadores del contexto
+  const { jugadoresReclutados, setJugadoresReclutados } = useJugadores(); // Obtenemos los jugadores del contexto
   const [searchTerm, setSearchTerm] = useState("");
   const [modalOpen, setModalOpen] = useState(false);
+  const [modalEliminarOpen, setModalEliminarOpen] = useState(false);
   const [selectedPlayer, setSelectedPlayer] = useState(null);
+  const [jugadorAEliminar, setJugadorAEliminar] = useState(null);
+  const [sortConfig, setSortConfig] = useState({
+    key: null,
+    direction: 'ascending'
+  });
+
+  // Función para ordenar los jugadores
+  const sortedPlayers = React.useMemo(() => {
+    let sortablePlayers = [...Object.entries(jugadoresReclutados)];
+    if (sortConfig.key) {
+      sortablePlayers.sort((a, b) => {
+        if (sortConfig.key === 'nombre') {
+          const nameA = `${a[1].nombre} ${a[1].apellido}`.toLowerCase();
+          const nameB = `${b[1].nombre} ${b[1].apellido}`.toLowerCase();
+          if (sortConfig.direction === 'ascending') {
+            return nameA.localeCompare(nameB);
+          } else {
+            return nameB.localeCompare(nameA);
+          }
+        } else if (sortConfig.key === 'cedula') {
+          if (sortConfig.direction === 'ascending') {
+            return a[0].localeCompare(b[0]);
+          } else {
+            return b[0].localeCompare(a[0]);
+          }
+        }
+        return 0;
+      });
+    }
+    return sortablePlayers;
+  }, [jugadoresReclutados, sortConfig]);
+
+  const requestSort = (key) => {
+    let direction = 'ascending';
+    if (sortConfig.key === key && sortConfig.direction === 'ascending') {
+      direction = 'descending';
+    }
+    setSortConfig({ key, direction });
+  };
+
+  const getSortIcon = (key) => {
+    if (sortConfig.key !== key) {
+      return <i className="fas fa-sort" />;
+    }
+    return sortConfig.direction === 'ascending' 
+      ? <i className="fas fa-sort-up" /> 
+      : <i className="fas fa-sort-down" />;
+  };
 
   // Filtrar jugadores
-  const filteredPlayers = Object.entries(jugadoresReclutados).filter(([cedula, player]) => {
+  const filteredPlayers = sortedPlayers.filter(([cedula, player]) => {
     const termLower = searchTerm.toLowerCase();
     const fullName = `${player.nombre} ${player.apellido}`.toLowerCase();
     return fullName.includes(termLower) || cedula.includes(searchTerm);
@@ -44,6 +94,19 @@ const Jugadores = () => {
   const handlePlayerClick = (cedula) => {
     setSelectedPlayer(jugadoresReclutados[cedula]);
     setModalOpen(true);
+  };
+
+  const handleEliminarJugador = (cedula) => {
+    setJugadorAEliminar(cedula);
+    setModalEliminarOpen(true);
+  };
+
+  const confirmarEliminacion = () => {
+    const nuevosJugadores = { ...jugadoresReclutados };
+    delete nuevosJugadores[jugadorAEliminar];
+    setJugadoresReclutados(nuevosJugadores);
+    setModalEliminarOpen(false);
+    setJugadorAEliminar(null);
   };
 
   return (
@@ -86,13 +149,37 @@ const Jugadores = () => {
           <Col>
             <Card className="shadow">
               <CardHeader className="border-0">
-                <h3 className="mb-0">Jugadores Reclutados</h3>
+                <Row className="align-items-center">
+                  <Col>
+                    <h3 className="mb-0">Jugadores Reclutados</h3>
+                  </Col>
+                  <Col className="text-right">
+                    <Button 
+                      color="danger"
+                      onClick={() => setModalEliminarOpen(true)}
+                    >
+                      Eliminar Jugador
+                    </Button>
+                  </Col>
+                </Row>
               </CardHeader>
               <Table className="align-items-center table-flush" responsive>
                 <thead className="thead-light">
                   <tr>
-                    <th scope="col">Nombre</th>
-                    <th scope="col">Cédula</th>
+                    <th 
+                      scope="col" 
+                      style={{ cursor: 'pointer' }}
+                      onClick={() => requestSort('nombre')}
+                    >
+                      Nombre {getSortIcon('nombre')}
+                    </th>
+                    <th 
+                      scope="col" 
+                      style={{ cursor: 'pointer' }}
+                      onClick={() => requestSort('cedula')}
+                    >
+                      Cédula {getSortIcon('cedula')}
+                    </th>
                     <th scope="col">Posición</th>
                     <th scope="col">Trayectoria</th>
                     <th scope="col">Referencia</th>
@@ -131,6 +218,54 @@ const Jugadores = () => {
             </Card>
           </Col>
         </Row>
+
+        {/* Modal de Confirmación de Eliminación */}
+        <Modal
+          isOpen={modalEliminarOpen}
+          toggle={() => setModalEliminarOpen(false)}
+          className="modal-dialog-centered"
+        >
+          <ModalHeader toggle={() => setModalEliminarOpen(false)}>
+            Confirmar Eliminación
+          </ModalHeader>
+          <ModalBody>
+            <FormGroup>
+              <Label>Seleccione el jugador a eliminar</Label>
+              <Input
+                type="select"
+                onChange={(e) => setJugadorAEliminar(e.target.value)}
+                value={jugadorAEliminar || ""}
+              >
+                <option value="">Seleccione un jugador...</option>
+                {Object.entries(jugadoresReclutados).map(([cedula, player]) => (
+                  <option key={cedula} value={cedula}>
+                    {player.nombre} {player.apellido} - {cedula}
+                  </option>
+                ))}
+              </Input>
+            </FormGroup>
+            {jugadorAEliminar && (
+              <div className="mt-3">
+                <p className="text-danger">
+                  ¿Está seguro que desea eliminar a {jugadoresReclutados[jugadorAEliminar]?.nombre} {jugadoresReclutados[jugadorAEliminar]?.apellido}?
+                  Esta acción no se puede deshacer.
+                </p>
+              </div>
+            )}
+          </ModalBody>
+          <ModalFooter>
+            <Button 
+              color="danger" 
+              onClick={confirmarEliminacion}
+              disabled={!jugadorAEliminar}
+            >
+              Eliminar
+            </Button>
+            <Button color="secondary" onClick={() => setModalEliminarOpen(false)}>
+              Cancelar
+            </Button>
+          </ModalFooter>
+        </Modal>
 
         {/* Modal de Detalles del Jugador */}
         <Modal

@@ -49,7 +49,7 @@ import {
 } from "reactstrap";
 // core components
 import Header from "components/Headers/Header.js";
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import React from "react";
 import ReclutamientoForm from "../ReclutamientoForm";
 import { useJugadores } from '../../context/JugadoresContext';
@@ -67,48 +67,106 @@ const Tables = () => {
   const { agregarJugadores } = useJugadores();
   const [searchTerm, setSearchTerm] = useState("");
   const [deleteModalOpen, setDeleteModalOpen] = useState(false);
-  const [playerToDelete, setPlayerToDelete] = useState(null); // Almacenará la cédula del jugador a eliminar
-  const [players, setPlayers] = useState({
-    "V-25.789.456": {
-      nombre: "Juan",
-      apellido: "Pérez",
-      cedula: "V-25.789.456",
-      edad: 19,
-      altura: 175,
-      posicion: "Delantero",
-      trayectoria: "- Academia de Fútbol Juvenil (2019-2021)\n- Club Deportivo Regional (2021-2023)\n- Selección Estadal Sub-20 (2022)",
-      referencia: "Entrenador Carlos Martínez - Academia de Fútbol Juvenil\nTel: +58 412-1234567\nEmail: cmartinez@futboljuvenil.com",
-      estado: "pendiente" // pendiente, aprobado, descartado
-    },
-    "V-26.123.789": {
-      nombre: "Carlos",
-      apellido: "Rodríguez",
-      cedula: "V-26.123.789",
-      edad: 20,
-      altura: 180,
-      posicion: "Mediocampista",
-      trayectoria: "- Escuela de Fútbol Caracas (2018-2020)\n- Club Atlético Municipal (2020-2023)\n- Participación en Torneo Nacional Sub-21 (2022)",
-      referencia: "Director Técnico José Ramírez - Club Atlético Municipal\nTel: +58 414-7654321\nEmail: jramirez@clubatletico.com",
-      estado: "pendiente"
-    }
+  const [playerToDelete, setPlayerToDelete] = useState(null);
+  const [players, setPlayers] = useState(() => {
+    const saved = localStorage.getItem('solicitudesJugadores');
+    return saved ? JSON.parse(saved) : {
+      "V-25.789.456": {
+        nombre: "Juan",
+        apellido: "Pérez",
+        cedula: "V-25.789.456",
+        edad: 19,
+        altura: 175,
+        posicion: "Delantero",
+        trayectoria: "- Academia de Fútbol Juvenil (2019-2021)\n- Club Deportivo Regional (2021-2023)\n- Selección Estadal Sub-20 (2022)",
+        referencia: "Entrenador Carlos Martínez - Academia de Fútbol Juvenil\nTel: +58 412-1234567\nEmail: cmartinez@futboljuvenil.com",
+        estado: "pendiente"
+      },
+      "V-26.123.789": {
+        nombre: "Carlos",
+        apellido: "Rodríguez",
+        cedula: "V-26.123.789",
+        edad: 20,
+        altura: 180,
+        posicion: "Mediocampista",
+        trayectoria: "- Escuela de Fútbol Caracas (2018-2020)\n- Club Atlético Municipal (2020-2023)\n- Participación en Torneo Nacional Sub-21 (2022)",
+        referencia: "Director Técnico José Ramírez - Club Atlético Municipal\nTel: +58 414-7654321\nEmail: jramirez@clubatletico.com",
+        estado: "pendiente"
+      }
+    };
   });
+
+  // Guardar en localStorage cuando cambien los datos
+  useEffect(() => {
+    localStorage.setItem('solicitudesJugadores', JSON.stringify(players));
+  }, [players]);
 
   // Estado para el modal de confirmación
   const [confirmModalOpen, setConfirmModalOpen] = useState(false);
 
+  const [sortConfig, setSortConfig] = useState({
+    key: null,
+    direction: 'ascending'
+  });
+
+  // Función para ordenar los jugadores
+  const sortedPlayers = React.useMemo(() => {
+    let sortablePlayers = { ...players };
+    if (sortConfig.key) {
+      const sortedEntries = Object.entries(sortablePlayers).sort((a, b) => {
+        if (sortConfig.key === 'nombre') {
+          const nameA = `${a[1].nombre} ${a[1].apellido}`.toLowerCase();
+          const nameB = `${b[1].nombre} ${b[1].apellido}`.toLowerCase();
+          if (sortConfig.direction === 'ascending') {
+            return nameA.localeCompare(nameB);
+          } else {
+            return nameB.localeCompare(nameA);
+          }
+        } else if (sortConfig.key === 'cedula') {
+          if (sortConfig.direction === 'ascending') {
+            return a[0].localeCompare(b[0]);
+          } else {
+            return b[0].localeCompare(a[0]);
+          }
+        }
+        return 0;
+      });
+      sortablePlayers = Object.fromEntries(sortedEntries);
+    }
+    return sortablePlayers;
+  }, [players, sortConfig]);
+
+  const requestSort = (key) => {
+    let direction = 'ascending';
+    if (sortConfig.key === key && sortConfig.direction === 'ascending') {
+      direction = 'descending';
+    }
+    setSortConfig({ key, direction });
+  };
+
+  const getSortIcon = (key) => {
+    if (sortConfig.key !== key) {
+      return <i className="fas fa-sort" />;
+    }
+    return sortConfig.direction === 'ascending' 
+      ? <i className="fas fa-sort-up" /> 
+      : <i className="fas fa-sort-down" />;
+  };
+
   // Función para filtrar jugadores
   const filterPlayers = (term) => {
     const termLower = term.toLowerCase();
+    const sortedPlayersList = Object.entries(sortedPlayers);
     
     // Filtrar jugadores de solicitudes (estado pendiente)
-    const solicitudesFiltered = Object.entries(players)
+    const solicitudesFiltered = sortedPlayersList
       .filter(([cedula, player]) => {
         const fullName = `${player.nombre} ${player.apellido}`.toLowerCase();
         return (fullName.includes(termLower) || cedula.includes(term)) && player.estado === "pendiente";
       });
 
     // Filtrar jugadores de pre-selección (estado aprobado)
-    const preSeleccionFiltered = Object.entries(players)
+    const preSeleccionFiltered = sortedPlayersList
       .filter(([cedula, player]) => {
         const fullName = `${player.nombre} ${player.apellido}`.toLowerCase();
         return (fullName.includes(termLower) || cedula.includes(term)) && player.estado === "aprobado";
@@ -164,7 +222,7 @@ const Tables = () => {
     }));
   };
 
-  // Efecto para filtrar jugadores cuando cambia el término de búsqueda
+  // Efecto para filtrar jugadores cuando cambia el término de búsqueda o el ordenamiento
   const [filteredPlayers, setFilteredPlayers] = useState({
     solicitudes: [],
     preSeleccion: []
@@ -172,7 +230,7 @@ const Tables = () => {
 
   React.useEffect(() => {
     setFilteredPlayers(filterPlayers(searchTerm));
-  }, [searchTerm, players]);
+  }, [searchTerm, sortedPlayers]);
 
   // Agregar los estilos al componente
   React.useEffect(() => {
@@ -285,8 +343,20 @@ const Tables = () => {
               <Table className="align-items-center table-flush" responsive>
                 <thead className="thead-light">
                   <tr>
-                    <th scope="col">Nombre</th>
-                    <th scope="col">Cédula</th>
+                    <th 
+                      scope="col"
+                      style={{ cursor: 'pointer' }}
+                      onClick={() => requestSort('nombre')}
+                    >
+                      Nombre {getSortIcon('nombre')}
+                    </th>
+                    <th 
+                      scope="col"
+                      style={{ cursor: 'pointer' }}
+                      onClick={() => requestSort('cedula')}
+                    >
+                      Cédula {getSortIcon('cedula')}
+                    </th>
                     <th scope="col">Posición</th>
                     <th scope="col">Acciones</th>
                   </tr>
@@ -361,8 +431,20 @@ const Tables = () => {
               <Table className="align-items-center table-flush" responsive>
                 <thead className="thead-light">
                   <tr>
-                    <th scope="col">Nombre</th>
-                    <th scope="col">Cédula</th>
+                    <th 
+                      scope="col"
+                      style={{ cursor: 'pointer' }}
+                      onClick={() => requestSort('nombre')}
+                    >
+                      Nombre {getSortIcon('nombre')}
+                    </th>
+                    <th 
+                      scope="col"
+                      style={{ cursor: 'pointer' }}
+                      onClick={() => requestSort('cedula')}
+                    >
+                      Cédula {getSortIcon('cedula')}
+                    </th>
                     <th scope="col">Posición</th>
                     <th scope="col">Estado</th>
                     <th scope="col">Acciones</th>

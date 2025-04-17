@@ -35,7 +35,7 @@ const Header = ({ proximaSesion, solicitudesPendientes }) => {
             {/* Card stats */}
             <Row>
               {/* Nueva tarjeta para solicitudes pendientes */}
-              <Col lg="6" xl="4">
+              <Col lg="6" xl="6">
                 <Card className="card-stats mb-4 mb-xl-0">
                   <CardBody>
                     <Row>
@@ -64,7 +64,7 @@ const Header = ({ proximaSesion, solicitudesPendientes }) => {
               </Col>
               {/* Carta para la próxima sesión */}
               {proximaSesion && (
-                <Col lg="6" xl="4">
+                <Col lg="6" xl="6">
                   <Card className="card-stats mb-4 mb-xl-0">
                     <CardBody>
                       <Row>

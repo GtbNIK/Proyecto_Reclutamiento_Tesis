@@ -37,7 +37,7 @@ const Sesiones = () => {
     {
       id: 1,
       titulo: "Sesión 1",
-      fecha: new Date().toISOString().split('T')[0], // Agregar fecha por defecto
+      fecha: new Date().toISOString().split('T')[0],
       tipo: "ofensiva",
       jugadores: Object.keys(jugadoresReclutados).map(cedula => ({
         cedula,
@@ -47,11 +47,11 @@ const Sesiones = () => {
         goles: 0,
         asistencias: 0,
         // Estadísticas avanzadas
-        pases: { completados: 0, intentados: 0, efectividad: 0 },
-        tiros: { alArco: 0, total: 0, precision: 0, xG: 0 },
-        duelos: { ganados: 0, total: 0, porcentaje: 0 },
+        pases: { completados: null, intentados: null, efectividad: null },
+        tiros: { alArco: null, total: null, precision: null, xG: null },
+        duelos: { ganados: null, total: null, porcentaje: null },
         posesion: { recuperaciones: 0, perdidas: 0 },
-        centros: { completados: 0, intentados: 0, precision: 0 },
+        centros: { completados: null, intentados: null, precision: null },
         intercepciones: 0,
         bloqueos: 0
       }))
@@ -101,15 +101,93 @@ const Sesiones = () => {
     return true;
   };
 
+  // Función para validar las estadísticas antes de guardar
+  const validarEstadisticas = (jugador) => {
+    const errores = [];
+
+    // Validar tiros
+    if (jugador.tiros.alArco !== null && jugador.tiros.total !== null) {
+      if (jugador.tiros.alArco > jugador.tiros.total) {
+        errores.push("Los tiros al arco no pueden ser mayores que los tiros totales");
+      }
+    }
+
+    // Validar pases
+    if (jugador.pases.completados !== null && jugador.pases.intentados !== null) {
+      if (jugador.pases.completados > jugador.pases.intentados) {
+        errores.push("Los pases completados no pueden ser mayores que los pases intentados");
+      }
+    }
+
+    // Validar duelos
+    if (jugador.duelos.ganados !== null && jugador.duelos.total !== null) {
+      if (jugador.duelos.ganados > jugador.duelos.total) {
+        errores.push("Los duelos ganados no pueden ser mayores que los duelos totales");
+      }
+    }
+
+    // Validar centros
+    if (jugador.centros.completados !== null && jugador.centros.intentados !== null) {
+      if (jugador.centros.completados > jugador.centros.intentados) {
+        errores.push("Los centros completados no pueden ser mayores que los centros intentados");
+      }
+    }
+
+    return errores;
+  };
+
   // Guarda los datos de la estadística editada
   const handleSaveStats = () => {
+    const errores = validarEstadisticas(selectedPlayer);
+    
+    if (errores.length > 0) {
+      alert(errores.join('\n'));
+      return;
+    }
+
+    // Calcular estadísticas derivadas
+    const jugadorActualizado = { ...selectedPlayer };
+
+    // Calcular efectividad de pases
+    if (jugadorActualizado.pases.completados !== null && jugadorActualizado.pases.intentados !== null) {
+      jugadorActualizado.pases.efectividad = jugadorActualizado.pases.intentados > 0 
+        ? Math.round((jugadorActualizado.pases.completados / jugadorActualizado.pases.intentados) * 100)
+        : null;
+    }
+
+    // Calcular precisión de tiros y xG
+    if (jugadorActualizado.tiros.alArco !== null && jugadorActualizado.tiros.total !== null) {
+      const precision = jugadorActualizado.tiros.total > 0 
+        ? Math.round((jugadorActualizado.tiros.alArco / jugadorActualizado.tiros.total) * 100)
+        : null;
+      const xG = jugadorActualizado.tiros.alArco > 0 
+        ? (jugadorActualizado.tiros.alArco * 0.3).toFixed(1)
+        : null;
+      jugadorActualizado.tiros.precision = precision;
+      jugadorActualizado.tiros.xG = xG;
+    }
+
+    // Calcular porcentaje de duelos
+    if (jugadorActualizado.duelos.ganados !== null && jugadorActualizado.duelos.total !== null) {
+      jugadorActualizado.duelos.porcentaje = jugadorActualizado.duelos.total > 0
+        ? Math.round((jugadorActualizado.duelos.ganados / jugadorActualizado.duelos.total) * 100)
+        : null;
+    }
+
+    // Calcular precisión de centros
+    if (jugadorActualizado.centros.completados !== null && jugadorActualizado.centros.intentados !== null) {
+      jugadorActualizado.centros.precision = jugadorActualizado.centros.intentados > 0
+        ? Math.round((jugadorActualizado.centros.completados / jugadorActualizado.centros.intentados) * 100)
+        : null;
+    }
+
     setSesiones(prevSesiones =>
       prevSesiones.map(sesion =>
         sesion.id === selectedPlayer.sesionId
           ? {
               ...sesion,
               jugadores: sesion.jugadores.map(j =>
-                j.cedula === selectedPlayer.cedula ? selectedPlayer : j
+                j.cedula === selectedPlayer.cedula ? jugadorActualizado : j
               )
             }
           : sesion
@@ -121,84 +199,51 @@ const Sesiones = () => {
 
   // Funciones para manejar cambios en los inputs
   const handlePasesChange = (e, field) => {
-    const value = parseInt(e.target.value) || 0;
-    setSelectedPlayer(prev => {
-      const newPases = { ...prev.pases, [field]: value };
-      const efectividad = calcularEfectividadPases(newPases.completados, newPases.intentados);
-      
-      if (validarPorcentaje(efectividad)) {
-        return {
-          ...prev,
-          pases: {
-            ...newPases,
-            efectividad
-          }
-        };
+    const value = e.target.value === '' ? null : parseInt(e.target.value);
+    setSelectedPlayer(prev => ({
+      ...prev,
+      pases: {
+        ...prev.pases,
+        [field]: value
       }
-      return prev; // No actualiza si el porcentaje es inválido
-    });
+    }));
   };
 
   const handleTirosChange = (e, field) => {
-    const value = parseInt(e.target.value) || 0;
-    setSelectedPlayer(prev => {
-      const newTiros = { ...prev.tiros, [field]: value };
-      const { precision, xG } = calcularPrecisionTiros(newTiros.alArco, newTiros.total);
-      
-      if (validarPorcentaje(precision)) {
-        return {
-          ...prev,
-          tiros: {
-            ...newTiros,
-            precision,
-            xG
-          }
-        };
+    const value = e.target.value === '' ? null : parseInt(e.target.value);
+    setSelectedPlayer(prev => ({
+      ...prev,
+      tiros: {
+        ...prev.tiros,
+        [field]: value
       }
-      return prev; // No actualiza si el porcentaje es inválido
-    });
+    }));
   };
 
   const handleDuelosChange = (e, field) => {
-    const value = parseInt(e.target.value) || 0;
-    setSelectedPlayer(prev => {
-      const newDuelos = { ...prev.duelos, [field]: value };
-      const nuevoPorcentaje = calcularPorcentajeDuelos(newDuelos.ganados, newDuelos.total);
-      
-      if (validarPorcentaje(nuevoPorcentaje)) {
-        return {
-          ...prev,
-          duelos: {
-            ...newDuelos,
-            porcentaje: nuevoPorcentaje
-          }
-        };
+    const value = e.target.value === '' ? null : parseInt(e.target.value);
+    setSelectedPlayer(prev => ({
+      ...prev,
+      duelos: {
+        ...prev.duelos,
+        [field]: value
       }
-      return prev; // No actualiza si el porcentaje es inválido
-    });
+    }));
   };
 
   const handleCentrosChange = (e, field) => {
-    const value = parseInt(e.target.value) || 0;
-    setSelectedPlayer(prev => {
-      const newCentros = { ...prev.centros, [field]: value };
-      const precision = calcularPrecisionCentros(newCentros.completados, newCentros.intentados);
-      
-      if (validarPorcentaje(precision)) {
-        return {
-          ...prev,
-          centros: {
-            ...newCentros,
-            precision
-          }
-        };
+    const value = e.target.value === '' ? null : parseInt(e.target.value);
+    setSelectedPlayer(prev => ({
+      ...prev,
+      centros: {
+        ...prev.centros,
+        [field]: value
       }
-      return prev; // No actualiza si el porcentaje es inválido
-    });
+    }));
   };
 
   const handleSimpleStatChange = (e, statName) => {
-    const value = parseInt(e.target.value) || 0;
+    const value = e.target.value === '' ? null : parseInt(e.target.value);
     setSelectedPlayer(prev => ({
       ...prev,
       [statName]: value
@@ -206,7 +251,7 @@ const Sesiones = () => {
   };
 
   const handlePosesionChange = (e, field) => {
-    const value = parseInt(e.target.value) || 0;
+    const value = e.target.value === '' ? null : parseInt(e.target.value);
     setSelectedPlayer(prev => ({
       ...prev,
       posesion: {
@@ -740,7 +785,7 @@ const Sesiones = () => {
             Confirmar Eliminación
           </ModalHeader>
           <ModalBody>
-            ¿Estás seguro de que deseas eliminar esta sesión?
+            ¿Está seguro de que desea eliminar esta sesión?
           </ModalBody>
           <ModalFooter>
             <Button color="danger" onClick={eliminarSesion}>
