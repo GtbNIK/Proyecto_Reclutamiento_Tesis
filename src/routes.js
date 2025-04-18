@@ -26,6 +26,7 @@ import Auth from "layouts/Auth.js";
 import LandingPage from "views/LandingPage.jsx";
 import Jugadores from "views/examples/Jugadores.js";
 import Sesiones from "views/examples/Sesiones";
+import Estadisticas from "views/examples/Estadisticas";
 
 // Rutas para el sidebar y navegación interna
 const routes = [
@@ -76,6 +77,13 @@ const routes = [
     name: "Sesiones",
     icon: "ni ni-calendar-grid-58 text-blue",
     component: Sesiones,
+    layout: "/admin"
+  },
+  {
+    path: "/estadisticas",
+    name: "Estadísticas",
+    icon: "ni ni-chart-bar-32 text-green",
+    component: Estadisticas,
     layout: "/admin"
   },
 ];

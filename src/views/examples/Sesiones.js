@@ -62,6 +62,57 @@ const Sesiones = () => {
   const [nuevoTipoSesion, setNuevoTipoSesion] = useState("ofensiva");
   const [nuevaFecha, setNuevaFecha] = useState(""); // Estado para la nueva fecha
 
+  // Definir las estadísticas relevantes por posición
+  const estadisticasPorPosicion = {
+    Defensa: [
+      { key: 'goles', label: 'Goles' },
+      { key: 'asistencias', label: 'Asistencias' },
+      { key: 'recuperaciones', label: 'Recuperaciones' },
+      { key: 'intercepciones', label: 'Intercepciones' },
+      { key: 'bloqueos', label: 'Bloqueos' },
+      { key: 'duelosAereos', label: 'Duelos Aéreos Ganados' }
+    ],
+    Mediocampista: [
+      { key: 'goles', label: 'Goles' },
+      { key: 'asistencias', label: 'Asistencias' },
+      { key: 'efectividadPases', label: 'Efectividad de Pases' },
+      { key: 'recuperaciones', label: 'Recuperaciones' },
+      { key: 'duelosGanados', label: 'Duelos Ganados' }
+    ],
+    Delantero: [
+      { key: 'goles', label: 'Goles' },
+      { key: 'asistencias', label: 'Asistencias' },
+      { key: 'efectividadTiros', label: 'Efectividad de Tiros' }
+    ],
+    Portero: [
+      { key: 'porcentajeParadas', label: 'Porcentaje de paradas' },
+      { key: 'golesConcedidos', label: 'Goles Concedidos' },
+      { key: 'pasesExitososPortero', label: 'Pases Exitosos (Portero)' },
+      { key: 'duelosManoAManoGanados', label: 'Duelos Mano a Mano Ganados' },
+      { key: 'duelosGanados', label: 'Duelos Ganados' }
+    ]
+  };
+
+  // Función para obtener la posición real del jugador
+  const getPosicionJugador = (jugador) => {
+    if (jugador.posicion) return jugador.posicion;
+    if (jugador.cedula && jugadoresReclutados[jugador.cedula]) {
+      return jugadoresReclutados[jugador.cedula].posicion;
+    }
+    return '';
+  };
+
+  // Función para obtener las estadísticas relevantes según la posición
+  const getEstadisticasJugador = (jugador) => {
+    const posicion = getPosicionJugador(jugador);
+    if (!posicion) return [];
+    if (posicion.toLowerCase().includes('defensa')) return estadisticasPorPosicion.Defensa;
+    if (posicion.toLowerCase().includes('mediocampista')) return estadisticasPorPosicion.Mediocampista;
+    if (posicion.toLowerCase().includes('delantero')) return estadisticasPorPosicion.Delantero;
+    if (posicion.toLowerCase().includes('portero')) return estadisticasPorPosicion.Portero;
+    return [];
+  };
+
   // Abre el modal para editar una estadística específica
   const handleStatClick = (sesionId, jugador, statName) => {
     setSelectedPlayer({ ...jugador, sesionId });
@@ -140,6 +191,45 @@ const Sesiones = () => {
   const handleSaveStats = () => {
     const errores = validarEstadisticas(selectedPlayer);
     
+    // Validación especial para portero
+    if (selectedStat === 'porcentajeParadas') {
+      if ((selectedPlayer.paradasRealizadas ?? 0) > (selectedPlayer.tirosAPorteria ?? 0)) {
+        alert('Las paradas no pueden ser mayores que los tiros a portería');
+        return;
+      }
+    }
+
+    // Validación general para evitar números negativos y caracteres no numéricos
+    const camposNumericos = [
+      'goles', 'asistencias', 'pasesExitososPortero', 'duelosManoAManoGanados',
+      'paradasRealizadas', 'tirosAPorteria', 'pases.completados', 'pases.intentados', 'pases.efectividad',
+      'tiros.alArco', 'tiros.total', 'tiros.precision',
+      'duelos.ganados', 'duelos.total', 'duelos.porcentaje',
+      'posesion.recuperaciones', 'posesion.perdidas',
+      'centros.completados', 'centros.intentados', 'centros.precision',
+      'intercepciones', 'bloqueos', 'distribucion', 'duelosGanados'
+    ];
+    for (const campo of camposNumericos) {
+      let valor = selectedPlayer;
+      if (campo.includes('.')) {
+        const [obj, prop] = campo.split('.');
+        valor = valor[obj]?.[prop];
+      } else {
+        valor = valor[campo];
+      }
+      if (valor !== undefined && valor !== null) {
+        // Validar que sea un número válido y no negativo
+        if (typeof valor === 'string' && valor.trim() !== '' && !/^\d+(\.\d+)?$/.test(valor)) {
+          alert('Solo se permiten números positivos en las estadísticas. Corrige el campo: ' + campo.replace('.', ' '));
+          return;
+        }
+        if (isNaN(valor) || valor < 0) {
+          alert('No se permiten valores negativos ni caracteres especiales/letras en las estadísticas. Corrige el campo: ' + campo.replace('.', ' '));
+          return;
+        }
+      }
+    }
+
     if (errores.length > 0) {
       alert(errores.join('\n'));
       return;
@@ -320,6 +410,204 @@ const Sesiones = () => {
     setSesiones(prevSesiones => [...prevSesiones, nuevaSesion]);
   };
 
+  // Construir lista de todas las estadísticas únicas de todas las posiciones
+  const allStats = Array.from(new Set([
+    ...estadisticasPorPosicion.Defensa,
+    ...estadisticasPorPosicion.Mediocampista,
+    ...estadisticasPorPosicion.Delantero,
+    ...estadisticasPorPosicion.Portero
+  ].map(est => est.key)))
+    .map(key => {
+      // Buscar el label correspondiente
+      const found = [
+        ...estadisticasPorPosicion.Defensa,
+        ...estadisticasPorPosicion.Mediocampista,
+        ...estadisticasPorPosicion.Delantero,
+        ...estadisticasPorPosicion.Portero
+      ].find(est => est.key === key);
+      return { key, label: found ? found.label : key };
+    });
+
+  // Función para obtener el valor y el onClick de cada estadística
+  const getStatCell = (sesion, jugador, est, handleStatClick) => {
+    switch(est.key) {
+      case 'goles':
+        return (
+          <td key="goles">
+            <Badge 
+              color="success" 
+              style={{ cursor: 'pointer', fontSize: '1rem' }}
+              onClick={() => handleStatClick(sesion.id, jugador, 'goles')}
+            >
+              {jugador.goles ?? '-'}
+            </Badge>
+          </td>
+        );
+      case 'asistencias':
+        return (
+          <td key="asistencias">
+            <Badge 
+              color="info" 
+              style={{ cursor: 'pointer', fontSize: '1rem' }}
+              onClick={() => handleStatClick(sesion.id, jugador, 'asistencias')}
+            >
+              {jugador.asistencias ?? '-'}
+            </Badge>
+          </td>
+        );
+      case 'recuperaciones':
+        return (
+          <td key="recuperaciones">
+            <Badge 
+              color="primary" 
+              style={{ cursor: 'pointer', fontSize: '1rem' }}
+              onClick={() => handleStatClick(sesion.id, jugador, 'posesion')}
+            >
+              {jugador.posesion?.recuperaciones ?? '-'}
+            </Badge>
+          </td>
+        );
+      case 'intercepciones':
+        return (
+          <td key="intercepciones">
+            <Badge 
+              color="danger" 
+              style={{ cursor: 'pointer', fontSize: '1rem' }}
+              onClick={() => handleStatClick(sesion.id, jugador, 'defensa')}
+            >
+              {jugador.intercepciones ?? '-'}
+            </Badge>
+          </td>
+        );
+      case 'bloqueos':
+        return (
+          <td key="bloqueos">
+            <Badge 
+              color="danger" 
+              style={{ cursor: 'pointer', fontSize: '1rem' }}
+              onClick={() => handleStatClick(sesion.id, jugador, 'defensa')}
+            >
+              {jugador.bloqueos ?? '-'}
+            </Badge>
+          </td>
+        );
+      case 'duelosAereos':
+        // Usamos duelos.ganados como aproximación
+        return (
+          <td key="duelosAereos">
+            <div style={{ cursor: 'pointer' }} onClick={() => handleStatClick(sesion.id, jugador, 'duelos')}>
+              {jugador.duelos?.ganados ?? '-'}
+            </div>
+          </td>
+        );
+      case 'efectividadPases':
+        return (
+          <td key="efectividadPases">
+            <div style={{ cursor: 'pointer' }} onClick={() => handleStatClick(sesion.id, jugador, 'pases')}>
+              <Progress
+                value={jugador.pases?.efectividad ?? 0}
+                color={jugador.pases?.efectividad > 80 ? 'success' : 
+                      jugador.pases?.efectividad > 60 ? 'info' : 'warning'}
+                style={{ height: '23px' }}
+              >
+                {jugador.pases?.efectividad ?? '-'}%
+              </Progress>
+              <small>{jugador.pases?.completados ?? '-'} / {jugador.pases?.intentados ?? '-'}</small>
+            </div>
+          </td>
+        );
+      case 'duelosGanados':
+        return (
+          <td key="duelosGanados">
+            <div style={{ cursor: 'pointer' }} onClick={() => handleStatClick(sesion.id, jugador, 'duelos')}>
+              <Progress
+                value={jugador.duelos?.porcentaje ?? 0}
+                color={jugador.duelos?.porcentaje > 60 ? 'success' : 
+                      jugador.duelos?.porcentaje > 40 ? 'info' : 'warning'}
+                style={{ height: '23px' }}
+              >
+                {jugador.duelos?.porcentaje ?? '-'}%
+              </Progress>
+              <small>{jugador.duelos?.ganados ?? '-'} / {jugador.duelos?.total ?? '-'}</small>
+            </div>
+          </td>
+        );
+      case 'efectividadTiros':
+        return (
+          <td key="efectividadTiros">
+            <div style={{ cursor: 'pointer' }} onClick={() => handleStatClick(sesion.id, jugador, 'tiros')}>
+              <Progress
+                value={jugador.tiros?.precision ?? 0}
+                color={jugador.tiros?.precision > 50 ? 'success' : 
+                      jugador.tiros?.precision > 30 ? 'info' : 'warning'}
+                style={{ height: '23px' }}
+              >
+                {jugador.tiros?.precision ?? '-'}%
+              </Progress>
+              <small>{jugador.tiros?.alArco ?? '-'} / {jugador.tiros?.total ?? '-'}</small>
+            </div>
+          </td>
+        );
+      case 'porcentajeParadas': {
+        // Calcular el porcentaje
+        const paradas = jugador.paradasRealizadas ?? 0;
+        const tiros = jugador.tirosAPorteria ?? 0;
+        const porcentaje = tiros > 0 ? Math.round((paradas / tiros) * 100) : 0;
+        return (
+          <td key="porcentajeParadas">
+            <div style={{ cursor: 'pointer' }} onClick={() => handleStatClick(sesion.id, jugador, 'porcentajeParadas')}>
+              <Progress
+                value={porcentaje}
+                color={porcentaje > 80 ? 'success' : porcentaje > 60 ? 'info' : 'warning'}
+                style={{ height: '23px' }}
+              >
+                {porcentaje}%
+              </Progress>
+              <small>{paradas} / {tiros}</small>
+            </div>
+          </td>
+        );
+      }
+      case 'golesConcedidos': {
+        // Calcular goles concedidos automáticamente
+        const paradas = jugador.paradasRealizadas ?? 0;
+        const tiros = jugador.tirosAPorteria ?? 0;
+        const golesConcedidos = Math.max(0, tiros - paradas);
+        return (
+          <td key="golesConcedidos">
+            {golesConcedidos}
+          </td>
+        );
+      }
+      case 'pasesExitososPortero':
+        return (
+          <td key="pasesExitososPortero">
+            <Badge 
+              color="info" 
+              style={{ cursor: 'pointer', fontSize: '1rem', backgroundColor: '#17a2b8', color: 'white', padding: '8px 16px', borderRadius: '12px' }}
+              onClick={() => handleStatClick(sesion.id, jugador, 'pasesExitososPortero')}
+            >
+              {jugador.pasesExitososPortero ?? '-'}
+            </Badge>
+          </td>
+        );
+      case 'duelosManoAManoGanados':
+        return (
+          <td key="duelosManoAManoGanados">
+            <Badge 
+              color="warning" 
+              style={{ cursor: 'pointer', fontSize: '1rem', backgroundColor: '#ffc107', color: '#212529', padding: '8px 16px', borderRadius: '12px' }}
+              onClick={() => handleStatClick(sesion.id, jugador, 'duelosManoAManoGanados')}
+            >
+              {jugador.duelosManoAManoGanados ?? '-'}
+            </Badge>
+          </td>
+        );
+      default:
+        return <td key={est.key}>-</td>;
+    }
+  };
+
   return (
     <>
       <div className="header bg-gradient-info pb-8 pt-5 pt-md-8">
@@ -397,136 +685,16 @@ const Sesiones = () => {
                   <thead className="thead-light">
                     <tr>
                       <th scope="col">Jugador</th>
-                          <th scope="col">Goles</th>
-                          <th scope="col">Asistencias</th>
-                      <th scope="col">Efectividad de Pases</th>
-                      <th scope="col">Precisión de Tiros (xG)</th>
-                      <th scope="col">Duelos Ganados</th>
-                      <th scope="col">Posesión (R/P)</th>
-                      <th scope="col">Centros</th>
-                      <th scope="col">Intercepciones/Bloqueos</th>
+                      {allStats.map(est => (
+                        <th key={est.key} scope="col">{est.label}</th>
+                      ))}
                     </tr>
                   </thead>
                   <tbody>
                     {sesion.jugadores.map(jugador => (
                       <tr key={jugador.cedula}>
                         <td>{`${jugador.nombre} ${jugador.apellido}`}</td>
-                        
-                        {/* Goles */}
-                        <td>
-                          <Badge 
-                            color="success" 
-                            style={{ cursor: 'pointer', fontSize: '1rem' }}
-                            onClick={() => handleStatClick(sesion.id, jugador, 'goles')}
-                          >
-                            {jugador.goles}
-                          </Badge>
-                        </td>
-                        
-                        {/* Asistencias */}
-                        <td>
-                          <Badge 
-                            color="info" 
-                            style={{ cursor: 'pointer', fontSize: '1rem' }}
-                            onClick={() => handleStatClick(sesion.id, jugador, 'asistencias')}
-                          >
-                            {jugador.asistencias}
-                          </Badge>
-                        </td>
-                        
-                        {/* Efectividad de Pases */}
-                        <td>
-                          <div 
-                            style={{ cursor: 'pointer' }}
-                            onClick={() => handleStatClick(sesion.id, jugador, 'pases')}
-                          >
-                            <Progress
-                              value={jugador.pases.efectividad}
-                              color={jugador.pases.efectividad > 80 ? 'success' : 
-                                    jugador.pases.efectividad > 60 ? 'info' : 'warning'}
-                              style={{ height: '23px' }}
-                            >
-                              {jugador.pases.efectividad}%
-                            </Progress>
-                            <small>{jugador.pases.completados}/{jugador.pases.intentados}</small>
-                          </div>
-                        </td>
-                        
-                        {/* Precisión de Tiros */}
-                        <td>
-                          <div 
-                            style={{ cursor: 'pointer' }}
-                            onClick={() => handleStatClick(sesion.id, jugador, 'tiros')}
-                          >
-                            <Progress
-                              value={jugador.tiros.precision}
-                              color={jugador.tiros.precision > 50 ? 'success' : 
-                                    jugador.tiros.precision > 30 ? 'info' : 'warning'}
-                              style={{ height: '23px' }}
-                            >
-                              {jugador.tiros.precision}%
-                            </Progress>
-                            <small>xG: {jugador.tiros.xG} | {jugador.tiros.alArco}/{jugador.tiros.total}</small>
-                          </div>
-                        </td>
-                        
-                        {/* Duelos Ganados */}
-                        <td>
-                          <div 
-                            style={{ cursor: 'pointer' }}
-                            onClick={() => handleStatClick(sesion.id, jugador, 'duelos')}
-                          >
-                            <Progress
-                              value={jugador.duelos.porcentaje}
-                              color={jugador.duelos.porcentaje > 60 ? 'success' : 
-                                    jugador.duelos.porcentaje > 40 ? 'info' : 'warning'}
-                              style={{ height: '23px' }}
-                            >
-                              {jugador.duelos.porcentaje}%
-                            </Progress>
-                            <small>{jugador.duelos.ganados}/{jugador.duelos.total}</small>
-                          </div>
-                        </td>
-                        
-                        {/* Recuperaciones/Pérdidas */}
-                        <td>
-                          <Badge 
-                            color="primary" 
-                            style={{ cursor: 'pointer', fontSize: '1rem' }}
-                            onClick={() => handleStatClick(sesion.id, jugador, 'posesion')}
-                          >
-                            {jugador.posesion.recuperaciones}/{jugador.posesion.perdidas}
-                          </Badge>
-                        </td>
-                        
-                        {/* Centros */}
-                        <td>
-                          <div 
-                            style={{ cursor: 'pointer' }}
-                            onClick={() => handleStatClick(sesion.id, jugador, 'centros')}
-                          >
-                            <Progress
-                              value={jugador.centros.precision}
-                              color={jugador.centros.precision > 40 ? 'success' : 
-                                    jugador.centros.precision > 20 ? 'info' : 'warning'}
-                              style={{ height: '23px' }}
-                            >
-                              {jugador.centros.precision}%
-                            </Progress>
-                            <small>{jugador.centros.completados}/{jugador.centros.intentados}</small>
-                          </div>
-                        </td>
-                        
-                        {/* Intercepciones/Bloqueos */}
-                        <td>
-                          <Badge 
-                            color="danger" 
-                            style={{ cursor: 'pointer', fontSize: '1rem' }}
-                            onClick={() => handleStatClick(sesion.id, jugador, 'defensa')}
-                          >
-                            {jugador.intercepciones}/{jugador.bloqueos}
-                          </Badge>
-                        </td>
+                        {allStats.map(est => getStatCell(sesion, { ...jugador, posicion: getPosicionJugador(jugador) }, est, handleStatClick))}
                       </tr>
                     ))}
                   </tbody>
@@ -643,7 +811,6 @@ const Sesiones = () => {
                     <Col md="12">
                       <div className="text-center mt-3">
                         <h4>Precisión: {selectedPlayer.tiros.precision}%</h4>
-                        <h4>Goles Esperados (xG): {selectedPlayer.tiros.xG}</h4>
                       </div>
                     </Col>
                   </>
@@ -761,6 +928,63 @@ const Sesiones = () => {
                       </FormGroup>
                     </Col>
                   </>
+                )}
+
+                {/* Modal para Porcentaje de Paradas */}
+                {selectedStat === 'porcentajeParadas' && (
+                  <>
+                    <Col md="6">
+                      <FormGroup>
+                        <Label>Paradas realizadas</Label>
+                        <Input
+                          type="number"
+                          value={selectedPlayer.paradasRealizadas ?? ''}
+                          onChange={(e) => setSelectedPlayer(prev => ({ ...prev, paradasRealizadas: e.target.value === '' ? null : parseInt(e.target.value) }))}
+                        />
+                      </FormGroup>
+                    </Col>
+                    <Col md="6">
+                      <FormGroup>
+                        <Label>Tiros a portería</Label>
+                        <Input
+                          type="number"
+                          value={selectedPlayer.tirosAPorteria ?? ''}
+                          onChange={(e) => setSelectedPlayer(prev => ({ ...prev, tirosAPorteria: e.target.value === '' ? null : parseInt(e.target.value) }))}
+                        />
+                      </FormGroup>
+                    </Col>
+                    <Col md="12">
+                      <div className="text-center mt-3">
+                        <h4>Porcentaje: {selectedPlayer.tirosAPorteria > 0 ? Math.round((selectedPlayer.paradasRealizadas / selectedPlayer.tirosAPorteria) * 100) : 0}%</h4>
+                      </div>
+                    </Col>
+                  </>
+                )}
+                {/* Modal para Pases Exitosos (Portero) */}
+                {selectedStat === 'pasesExitososPortero' && (
+                  <Col md="12">
+                    <FormGroup>
+                      <Label>Pases Exitosos (Portero)</Label>
+                      <Input
+                        type="number"
+                        value={selectedPlayer.pasesExitososPortero ?? ''}
+                        onChange={(e) => setSelectedPlayer(prev => ({ ...prev, pasesExitososPortero: e.target.value === '' ? null : parseInt(e.target.value) }))}
+                      />
+                    </FormGroup>
+                  </Col>
+                )}
+                {/* Modal para Duelos Mano a Mano Ganados */}
+                {selectedStat === 'duelosManoAManoGanados' && (
+                  <Col md="12">
+                    <FormGroup>
+                      <Label>Duelos Mano a Mano Ganados</Label>
+                      <Input
+                        type="number"
+                        value={selectedPlayer.duelosManoAManoGanados ?? ''}
+                        onChange={(e) => setSelectedPlayer(prev => ({ ...prev, duelosManoAManoGanados: e.target.value === '' ? null : parseInt(e.target.value) }))}
+                      />
+                    </FormGroup>
+                  </Col>
                 )}
               </Row>
             )}

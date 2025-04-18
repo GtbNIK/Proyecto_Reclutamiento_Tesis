@@ -70,7 +70,22 @@ const Tables = () => {
   const [playerToDelete, setPlayerToDelete] = useState(null);
   const [players, setPlayers] = useState(() => {
     const saved = localStorage.getItem('solicitudesJugadores');
-    return saved ? JSON.parse(saved) : {
+    console.log('Datos cargados de localStorage (raw):', saved);
+    
+    if (saved && saved !== '{}') {
+      try {
+        const parsed = JSON.parse(saved);
+        console.log('Datos parseados de localStorage:', JSON.stringify(parsed, null, 2));
+        if (Object.keys(parsed).length > 0) {
+          return parsed;
+        }
+      } catch (error) {
+        console.error('Error al parsear datos de localStorage:', error);
+      }
+    }
+    
+    // Datos iniciales por defecto
+    const initialData = {
       "V-25.789.456": {
         nombre: "Juan",
         apellido: "Pérez",
@@ -92,12 +107,49 @@ const Tables = () => {
         trayectoria: "- Escuela de Fútbol Caracas (2018-2020)\n- Club Atlético Municipal (2020-2023)\n- Participación en Torneo Nacional Sub-21 (2022)",
         referencia: "Director Técnico José Ramírez - Club Atlético Municipal\nTel: +58 414-7654321\nEmail: jramirez@clubatletico.com",
         estado: "pendiente"
+      },
+      "V-27.456.123": {
+        nombre: "Luis",
+        apellido: "González",
+        cedula: "V-27.456.123",
+        edad: 21,
+        altura: 185,
+        posicion: "Defensa",
+        trayectoria: "- Escuela de Fútbol Miranda (2017-2019)\n- Club Deportivo Capital (2019-2023)\n- Selección Nacional Sub-20 (2021)",
+        referencia: "Entrenador Miguel Ángel Rojas - Club Deportivo Capital\nTel: +58 416-9876543\nEmail: mrojas@clubcapital.com",
+        estado: "pendiente"
+      },
+      "V-28.789.321": {
+        nombre: "Andrés",
+        apellido: "Martínez",
+        cedula: "V-28.789.321",
+        edad: 18,
+        altura: 178,
+        posicion: "Portero",
+        trayectoria: "- Academia de Porteros Elite (2018-2020)\n- Club Atlético Valencia (2020-2023)\n- Selección Estadal Sub-19 (2022)",
+        referencia: "Entrenador de Porteros José Luis Fernández - Club Atlético Valencia\nTel: +58 424-5678901\nEmail: jlfernandez@clubvalencia.com",
+        estado: "pendiente"
+      },
+      "V-29.147.258": {
+        nombre: "Diego",
+        apellido: "Hernández",
+        cedula: "V-29.147.258",
+        edad: 20,
+        altura: 182,
+        posicion: "Lateral",
+        trayectoria: "- Escuela de Fútbol Lara (2018-2020)\n- Club Deportivo Lara (2020-2023)\n- Selección Regional Sub-20 (2022)",
+        referencia: "Director Técnico Rafael Ortega - Club Deportivo Lara\nTel: +58 414-1234567\nEmail: rortega@clublara.com",
+        estado: "pendiente"
       }
     };
+    
+    console.log('Usando datos iniciales:', JSON.stringify(initialData, null, 2));
+    return initialData;
   });
 
   // Guardar en localStorage cuando cambien los datos
   useEffect(() => {
+    console.log('Guardando jugadores en localStorage:', JSON.stringify(players, null, 2));
     localStorage.setItem('solicitudesJugadores', JSON.stringify(players));
   }, [players]);
 
@@ -107,6 +159,19 @@ const Tables = () => {
   const [sortConfig, setSortConfig] = useState({
     key: null,
     direction: 'ascending'
+  });
+
+  // Estado para los jugadores filtrados
+  const [filteredPlayers, setFilteredPlayers] = useState(() => {
+    console.log('Inicializando filteredPlayers con players:', JSON.stringify(players, null, 2));
+    const sortedPlayersList = Object.entries(players);
+    console.log('Lista de jugadores ordenada:', JSON.stringify(sortedPlayersList, null, 2));
+    const solicitudes = sortedPlayersList.filter(([_, player]) => player.estado === "pendiente");
+    console.log('Solicitudes filtradas:', JSON.stringify(solicitudes, null, 2));
+    return {
+      solicitudes: solicitudes,
+      preSeleccion: sortedPlayersList.filter(([_, player]) => player.estado === "aprobado")
+    };
   });
 
   // Función para ordenar los jugadores
@@ -157,13 +222,18 @@ const Tables = () => {
   const filterPlayers = (term) => {
     const termLower = term.toLowerCase();
     const sortedPlayersList = Object.entries(sortedPlayers);
+    console.log('Jugadores ordenados:', sortedPlayersList);
     
     // Filtrar jugadores de solicitudes (estado pendiente)
     const solicitudesFiltered = sortedPlayersList
       .filter(([cedula, player]) => {
         const fullName = `${player.nombre} ${player.apellido}`.toLowerCase();
-        return (fullName.includes(termLower) || cedula.includes(term)) && player.estado === "pendiente";
+        const matches = (fullName.includes(termLower) || cedula.includes(term)) && player.estado === "pendiente";
+        console.log(`Jugador ${fullName} (${cedula}) - Estado: ${player.estado} - Coincide: ${matches}`);
+        return matches;
       });
+
+    console.log('Solicitudes después de filtrar:', solicitudesFiltered);
 
     // Filtrar jugadores de pre-selección (estado aprobado)
     const preSeleccionFiltered = sortedPlayersList
@@ -177,6 +247,14 @@ const Tables = () => {
       preSeleccion: preSeleccionFiltered
     };
   };
+
+  // Efecto para actualizar los jugadores filtrados
+  React.useEffect(() => {
+    console.log('Efecto ejecutado - searchTerm:', searchTerm);
+    const filtered = filterPlayers(searchTerm);
+    console.log('Resultado del filtrado:', filtered);
+    setFilteredPlayers(filtered);
+  }, [searchTerm, sortedPlayers]);
 
   // Función para manejar la aprobación de un jugador
   const handleApprove = (cedula) => {
@@ -221,16 +299,6 @@ const Tables = () => {
       }
     }));
   };
-
-  // Efecto para filtrar jugadores cuando cambia el término de búsqueda o el ordenamiento
-  const [filteredPlayers, setFilteredPlayers] = useState({
-    solicitudes: [],
-    preSeleccion: []
-  });
-
-  React.useEffect(() => {
-    setFilteredPlayers(filterPlayers(searchTerm));
-  }, [searchTerm, sortedPlayers]);
 
   // Agregar los estilos al componente
   React.useEffect(() => {
@@ -340,83 +408,87 @@ const Tables = () => {
               <CardHeader className="border-0">
                 <h3 className="mb-0">Solicitudes Pendientes</h3>
               </CardHeader>
-              <Table className="align-items-center table-flush" responsive>
-                <thead className="thead-light">
-                  <tr>
-                    <th 
-                      scope="col"
-                      style={{ cursor: 'pointer' }}
-                      onClick={() => requestSort('nombre')}
-                    >
-                      Nombre {getSortIcon('nombre')}
-                    </th>
-                    <th 
-                      scope="col"
-                      style={{ cursor: 'pointer' }}
-                      onClick={() => requestSort('cedula')}
-                    >
-                      Cédula {getSortIcon('cedula')}
-                    </th>
-                    <th scope="col">Posición</th>
-                    <th scope="col">Acciones</th>
-                  </tr>
-                </thead>
-                <tbody>
-                  {filteredPlayers.solicitudes.map(([cedula, player]) => (
-                    <tr 
-                      key={cedula}
-                      style={{ cursor: 'pointer' }} 
-                      className="hover-row"
-                      onClick={() => handlePlayerClick(cedula)}
-                    >
-                      <td>
-                        <span className="mb-0 text-sm">{player.nombre} {player.apellido}</span>
-                    </td>
-                      <td>{cedula}</td>
-                      <td>{player.posicion}</td>
-                      <td onClick={(e) => e.stopPropagation()}>
-                        {player.estado === "pendiente" ? (
-                          <>
-                            <Button
-                              color="success"
-                              size="lg"
-                              className="mr-2"
-                              onClick={(e) => {
-                                e.preventDefault();
-                                handleApprove(cedula);
-                              }}
-                            >
-                              <i className="fas fa-check" />
-                            </Button>
-                            <Button
-                              color="danger"
-                              size="lg"
-                              onClick={(e) => {
-                                e.preventDefault();
-                                e.stopPropagation();
-                                setPlayerToDelete(cedula); // Guarda la cédula del jugador a eliminar
-                                setDeleteModalOpen(true); // Abre el modal
-                              }}
-                            >
-                              <i className="fas fa-times" />
-                            </Button>
-                          </>
-                        ) : player.estado === "descartado" ? (
-                          <Button
-                            color="danger"
-                            size="lg"
-                            disabled
-                          >
-                            No califica
-                          </Button>
-                        ) : (
-                          <Badge color="success">Aprobado</Badge>
-                        )}
-                    </td>
-                  </tr>
-                  ))}
-                </tbody>
-              </Table>
+              <div className="table-responsive">
+                <Table className="align-items-center table-flush" responsive>
+                  <thead className="thead-light">
+                    <tr>
+                      <th scope="col" style={{ width: '30%' }}>Nombre</th>
+                      <th scope="col" style={{ width: '20%' }}>Cédula</th>
+                      <th scope="col" style={{ width: '20%' }}>Posición</th>
+                      <th scope="col" style={{ width: '30%' }}>Acciones</th>
+                    </tr>
+                  </thead>
+                  <tbody>
+                    {filteredPlayers.solicitudes.length > 0 ? (
+                      filteredPlayers.solicitudes.map(([cedula, player]) => (
+                        <tr 
+                          key={cedula}
+                          style={{ cursor: 'pointer' }} 
+                          className="hover-row"
+                          onClick={() => handlePlayerClick(cedula)}
+                        >
+                          <td className="align-middle">
+                            <span className="mb-0 text-sm font-weight-bold">
+                              {player.nombre} {player.apellido}
+                            </span>
+                          </td>
+                          <td className="align-middle">
+                            <span className="mb-0 text-sm">{cedula}</span>
+                          </td>
+                          <td className="align-middle">
+                            <span className="mb-0 text-sm">{player.posicion}</span>
+                          </td>
+                          <td className="align-middle" onClick={(e) => e.stopPropagation()}>
+                            {player.estado === "pendiente" ? (
+                              <div className="d-flex align-items-center">
+                                <Button
+                                  color="success"
+                                  size="sm"
+                                  className="mr-2"
+                                  onClick={(e) => {
+                                    e.preventDefault();
+                                    handleApprove(cedula);
+                                  }}
+                                >
+                                  <i className="fas fa-check" />
+                                </Button>
+                                <Button
+                                  color="danger"
+                                  size="sm"
+                                  onClick={(e) => {
+                                    e.preventDefault();
+                                    e.stopPropagation();
+                                    setPlayerToDelete(cedula);
+                                    setDeleteModalOpen(true);
+                                  }}
+                                >
+                                  <i className="fas fa-times" />
+                                </Button>
+                              </div>
+                            ) : player.estado === "descartado" ? (
+                              <Button
+                                color="danger"
+                                size="sm"
+                                disabled
+                              >
+                                No califica
+                              </Button>
+                            ) : (
+                              <Badge color="success">Aprobado</Badge>
+                            )}
+                          </td>
+                        </tr>
+                      ))
+                    ) : (
+                      <tr>
+                        <td colSpan="4" className="text-center py-4">
+                          <span className="text-muted">No hay jugadores pendientes</span>
+                        </td>
+                      </tr>
+                    )}
+                  </tbody>
+                </Table>
+              </div>
             </Card>
           </div>
         </Row>

@@ -103,8 +103,19 @@ const Jugadores = () => {
 
   const confirmarEliminacion = () => {
     const nuevosJugadores = { ...jugadoresReclutados };
+    const jugadorRestaurado = nuevosJugadores[jugadorAEliminar];
     delete nuevosJugadores[jugadorAEliminar];
     setJugadoresReclutados(nuevosJugadores);
+    // Restaurar a solicitudesJugadores en localStorage
+    if (jugadorRestaurado) {
+      const solicitudes = localStorage.getItem('solicitudesJugadores');
+      let solicitudesObj = solicitudes ? JSON.parse(solicitudes) : {};
+      solicitudesObj[jugadorAEliminar] = {
+        ...jugadorRestaurado,
+        estado: 'pendiente'
+      };
+      localStorage.setItem('solicitudesJugadores', JSON.stringify(solicitudesObj));
+    }
     setModalEliminarOpen(false);
     setJugadorAEliminar(null);
   };
@@ -187,32 +198,40 @@ const Jugadores = () => {
                   </tr>
                 </thead>
                 <tbody>
-                  {filteredPlayers.map(([cedula, player]) => (
-                    <tr 
-                      key={cedula}
-                      style={{ cursor: 'pointer' }}
-                      onClick={() => handlePlayerClick(cedula)}
-                    >
-                      <td>
-                        <span className="mb-0 text-sm">
-                          {player.nombre} {player.apellido}
-                        </span>
+                  {filteredPlayers.length > 0 ? (
+                    filteredPlayers.map(([cedula, player]) => (
+                      <tr 
+                        key={cedula}
+                        style={{ cursor: 'pointer' }}
+                        onClick={() => handlePlayerClick(cedula)}
+                      >
+                        <td>
+                          <span className="mb-0 text-sm">
+                            {player.nombre} {player.apellido}
+                          </span>
+                        </td>
+                        <td>{cedula}</td>
+                        <td>{player.posicion}</td>
+                        <td>
+                          <div style={{ maxWidth: '200px', whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>
+                            {player.trayectoria}
+                          </div>
+                        </td>
+                        <td>
+                          <div style={{ maxWidth: '200px', whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>
+                            {player.referencia}
+                          </div>
+                        </td>
+                        <td>{player.valoracion}</td>
+                      </tr>
+                    ))
+                  ) : (
+                    <tr>
+                      <td colSpan="6" className="text-center py-4">
+                        <span className="text-muted">Aún no hay jugadores reclutados</span>
                       </td>
-                      <td>{cedula}</td>
-                      <td>{player.posicion}</td>
-                      <td>
-                        <div style={{ maxWidth: '200px', whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>
-                          {player.trayectoria}
-                        </div>
-                      </td>
-                      <td>
-                        <div style={{ maxWidth: '200px', whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>
-                          {player.referencia}
-                        </div>
-                      </td>
-                      <td>{player.valoracion}</td>
                     </tr>
-                  ))}
+                  )}
                 </tbody>
               </Table>
             </Card>
