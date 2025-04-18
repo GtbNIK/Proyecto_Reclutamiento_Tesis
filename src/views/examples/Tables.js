@@ -412,10 +412,22 @@ const Tables = () => {
                 <Table className="align-items-center table-flush" responsive>
                   <thead className="thead-light">
                     <tr>
-                      <th scope="col" style={{ width: '30%' }}>Nombre</th>
-                      <th scope="col" style={{ width: '20%' }}>Cédula</th>
-                      <th scope="col" style={{ width: '20%' }}>Posición</th>
-                      <th scope="col" style={{ width: '30%' }}>Acciones</th>
+                      <th 
+                        scope="col"
+                        style={{ cursor: 'pointer' }}
+                        onClick={() => requestSort('nombre')}
+                      >
+                        Nombre {getSortIcon('nombre')}
+                      </th>
+                      <th 
+                        scope="col"
+                        style={{ cursor: 'pointer' }}
+                        onClick={() => requestSort('cedula')}
+                      >
+                        Cédula {getSortIcon('cedula')}
+                      </th>
+                      <th scope="col">Posición</th>
+                      <th scope="col">Acciones</th>
                     </tr>
                   </thead>
                   <tbody>
@@ -523,35 +535,43 @@ const Tables = () => {
                   </tr>
                 </thead>
                 <tbody>
-                  {filteredPlayers.preSeleccion.map(([cedula, player]) => (
-                    <tr 
-                      key={cedula}
-                      style={{ cursor: 'pointer' }} 
-                      className="hover-row"
-                      onClick={() => handlePlayerClick(cedula)}
-                    >
+                  {filteredPlayers.preSeleccion.length > 0 ? (
+                    filteredPlayers.preSeleccion.map(([cedula, player]) => (
+                      <tr 
+                        key={cedula}
+                        style={{ cursor: 'pointer' }} 
+                        className="hover-row"
+                        onClick={() => handlePlayerClick(cedula)}
+                      >
+                        <td>
+                          <span className="mb-0 text-sm">{player.nombre} {player.apellido}</span>
+                      </td>
+                        <td>{cedula}</td>
+                        <td>{player.posicion}</td>
+                        <td>
+                          <Badge color="success">Aprobado</Badge>
+                      </td>
                       <td>
-                        <span className="mb-0 text-sm">{player.nombre} {player.apellido}</span>
-                    </td>
-                      <td>{cedula}</td>
-                      <td>{player.posicion}</td>
-                      <td>
-                        <Badge color="success">Aprobado</Badge>
-                    </td>
-                    <td>
-                        <Button
-                          color="warning"
-                          size="lg"
-                          onClick={(e) => {
-                            e.stopPropagation(); // Evitar que el clic en el botón abra la carta
-                            handleReturn(cedula);
-                          }}
-                        >
-                          Volver
-                        </Button>
-                    </td>
-                  </tr>
-                  ))}
+                          <Button
+                            color="warning"
+                            size="lg"
+                            onClick={(e) => {
+                              e.stopPropagation(); // Evitar que el clic en el botón abra la carta
+                              handleReturn(cedula);
+                            }}
+                          >
+                            Volver
+                          </Button>
+                      </td>
+                    </tr>
+                    ))
+                  ) : (
+                    <tr>
+                      <td colSpan="5" className="text-center py-4">
+                        <span className="text-muted">No hay jugadores en la lista de Pre-selección</span>
+                      </td>
+                    </tr>
+                  )}
                 </tbody>
               </Table>
               <Button
@@ -668,12 +688,30 @@ const Tables = () => {
                     </Col>
                   </Row>
                   <Row>
-                    <Col md="12">
+                    <Col md="6">
                       <FormGroup>
                         <label className="form-control-label">Posición</label>
-                        <div className="h4 font-weight-normal border rounded p-3" style={{ borderColor: '#e9ecef' }}>
+                        <div className="h4 font-weight-normal border rounded p-3" style={{ borderColor: '#e9ecef', fontSize: '1.1rem', maxWidth: '180px', minWidth: '100px'}}>
                           {selectedPlayer.posicion}
-                      </div>
+                        </div>
+                      </FormGroup>
+                    </Col>
+                    <Col md="6">
+                      <FormGroup>
+                        <label className="form-control-label">Especialización</label>
+                        <div className="h4 font-weight-normal border rounded p-3" style={{ borderColor: '#e9ecef', fontSize: '1.1rem', minWidth: '100px' }}>
+                          {/* Por ahora vacío */}
+                        </div>
+                      </FormGroup>
+                    </Col>
+                  </Row>
+                  <Row>
+                    <Col md="12">
+                      <FormGroup>
+                        <label className="form-control-label">Pierna Hábil</label>
+                        <div className="h4 font-weight-normal border rounded p-3" style={{ borderColor: '#e9ecef' }}>
+                          {selectedPlayer.piernaHabil ? selectedPlayer.piernaHabil : 'No especificado'}
+                        </div>
                       </FormGroup>
                     </Col>
                   </Row>
@@ -700,7 +738,7 @@ const Tables = () => {
                         </div>
                       </FormGroup>
                     </Col>
-        </Row>
+                  </Row>
                 </CardBody>
               </Card>
             )}

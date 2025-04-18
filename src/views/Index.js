@@ -182,15 +182,21 @@ const Index = (props) => {
   // Función para obtener la próxima sesión
   const obtenerProximaSesion = () => {
     const hoy = new Date();
+    // Filtrar solo sesiones futuras
     const sesionesFuturas = proximasSesiones.filter(sesion => new Date(sesion.fecha) > hoy);
-    return sesionesFuturas.length > 0 ? sesionesFuturas[0] : null; // Retorna la primera sesión futura
+    // Ordenar por fecha ascendente
+    sesionesFuturas.sort((a, b) => new Date(a.fecha) - new Date(b.fecha));
+    return sesionesFuturas.length > 0 ? sesionesFuturas[0] : null;
   };
 
   const proximaSesion = obtenerProximaSesion();
 
   // Contar el número de solicitudes pendientes
   const contarSolicitudesPendientes = () => {
-    return proximasSesiones.length - 2; // Cambia esto si necesitas contar solicitudes de otra fuente
+    const saved = localStorage.getItem('solicitudesJugadores');
+    if (!saved) return 0;
+    const jugadores = JSON.parse(saved);
+    return Object.values(jugadores).filter(j => j.estado === 'pendiente').length;
   };
 
   const solicitudesPendientes = contarSolicitudesPendientes();

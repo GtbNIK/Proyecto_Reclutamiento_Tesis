@@ -61,6 +61,7 @@ const Sesiones = () => {
   const [nuevoTitulo, setNuevoTitulo] = useState("");
   const [nuevoTipoSesion, setNuevoTipoSesion] = useState("ofensiva");
   const [nuevaFecha, setNuevaFecha] = useState(""); // Estado para la nueva fecha
+  const [errorModal, setErrorModal] = useState("");
 
   // Definir las estadísticas relevantes por posición
   const estadisticasPorPosicion = {
@@ -88,7 +89,7 @@ const Sesiones = () => {
       { key: 'porcentajeParadas', label: 'Porcentaje de paradas' },
       { key: 'golesConcedidos', label: 'Goles Concedidos' },
       { key: 'pasesExitososPortero', label: 'Pases Exitosos (Portero)' },
-      { key: 'duelosManoAManoGanados', label: 'Duelos Mano a Mano Ganados' },
+      { key: 'duelosManoAManoGanados', label: 'Porcentaje de duelos Mano a Mano ganados' },
       { key: 'duelosGanados', label: 'Duelos Ganados' }
     ]
   };
@@ -117,6 +118,7 @@ const Sesiones = () => {
   const handleStatClick = (sesionId, jugador, statName) => {
     setSelectedPlayer({ ...jugador, sesionId });
     setSelectedStat(statName);
+    setErrorModal(""); // Limpiar error al abrir un nuevo modal
     setModalOpen(true);
   };
 
@@ -189,17 +191,34 @@ const Sesiones = () => {
 
   // Guarda los datos de la estadística editada
   const handleSaveStats = () => {
+    setErrorModal(""); // Limpiar error previo
     const errores = validarEstadisticas(selectedPlayer);
     
     // Validación especial para portero
     if (selectedStat === 'porcentajeParadas') {
       if ((selectedPlayer.paradasRealizadas ?? 0) > (selectedPlayer.tirosAPorteria ?? 0)) {
-        alert('Las paradas no pueden ser mayores que los tiros a portería');
+        setErrorModal('Las paradas no pueden ser mayores que los tiros a portería');
+        return;
+      }
+      if ((selectedPlayer.paradasRealizadas ?? 0) < 0 || (selectedPlayer.tirosAPorteria ?? 0) < 0) {
+        setErrorModal('No se permiten valores negativos en las estadísticas de portero.');
+        return;
+      }
+    }
+    if (selectedStat === 'duelosManoAManoGanados') {
+      const ganados = Number(selectedPlayer.duelosManoAManoGanados ?? 0);
+      const totales = Number(selectedPlayer.duelosManoAManoTotales ?? 0);
+      if (ganados < 0 || totales < 0) {
+        setErrorModal('No se permiten valores negativos en los duelos mano a mano.');
+        return;
+      }
+      if (ganados > totales) {
+        setErrorModal('Los duelos mano a mano ganados no pueden ser mayores que los duelos mano a mano totales');
         return;
       }
     }
 
-    // Validación general para evitar números negativos y caracteres no numéricos
+    // Validación general para evitar números negativos y caracteres no numéricos (ya implementada, pero reforzar para campos vacíos)
     const camposNumericos = [
       'goles', 'asistencias', 'pasesExitososPortero', 'duelosManoAManoGanados',
       'paradasRealizadas', 'tirosAPorteria', 'pases.completados', 'pases.intentados', 'pases.efectividad',
@@ -217,21 +236,21 @@ const Sesiones = () => {
       } else {
         valor = valor[campo];
       }
-      if (valor !== undefined && valor !== null) {
+      if (valor !== undefined && valor !== null && valor !== "") {
         // Validar que sea un número válido y no negativo
         if (typeof valor === 'string' && valor.trim() !== '' && !/^\d+(\.\d+)?$/.test(valor)) {
-          alert('Solo se permiten números positivos en las estadísticas. Corrige el campo: ' + campo.replace('.', ' '));
+          setErrorModal('Solo se permiten números positivos en las estadísticas. Corrige el campo: ' + campo.replace('.', ' '));
           return;
         }
-        if (isNaN(valor) || valor < 0) {
-          alert('No se permiten valores negativos ni caracteres especiales/letras en las estadísticas. Corrige el campo: ' + campo.replace('.', ' '));
+        if (isNaN(valor) || Number(valor) < 0) {
+          setErrorModal('No se permiten valores negativos ni caracteres especiales/letras en las estadísticas. Corrige el campo: ' + campo.replace('.', ' '));
           return;
         }
       }
     }
 
     if (errores.length > 0) {
-      alert(errores.join('\n'));
+      setErrorModal(errores.join('\n'));
       return;
     }
 
@@ -591,18 +610,26 @@ const Sesiones = () => {
             </Badge>
           </td>
         );
-      case 'duelosManoAManoGanados':
+      case 'duelosManoAManoGanados': {
+        // Calcular el porcentaje
+        const ganados = Number(jugador.duelosManoAManoGanados ?? 0);
+        const totales = Number(jugador.duelosManoAManoTotales ?? 0);
+        const porcentaje = totales > 0 ? Math.round((ganados / totales) * 100) : 0;
         return (
           <td key="duelosManoAManoGanados">
-            <Badge 
-              color="warning" 
-              style={{ cursor: 'pointer', fontSize: '1rem', backgroundColor: '#ffc107', color: '#212529', padding: '8px 16px', borderRadius: '12px' }}
-              onClick={() => handleStatClick(sesion.id, jugador, 'duelosManoAManoGanados')}
-            >
-              {jugador.duelosManoAManoGanados ?? '-'}
-            </Badge>
+            <div style={{ cursor: 'pointer' }} onClick={() => handleStatClick(sesion.id, jugador, 'duelosManoAManoGanados')}>
+              <Progress
+                value={porcentaje}
+                color={porcentaje > 80 ? 'success' : porcentaje > 60 ? 'info' : 'warning'}
+                style={{ height: '23px' }}
+              >
+                {porcentaje}%
+              </Progress>
+              <small>{ganados} / {totales}</small>
+            </div>
           </td>
         );
+      }
       default:
         return <td key={est.key}>-</td>;
     }
@@ -975,17 +1002,43 @@ const Sesiones = () => {
                 )}
                 {/* Modal para Duelos Mano a Mano Ganados */}
                 {selectedStat === 'duelosManoAManoGanados' && (
-                  <Col md="12">
-                    <FormGroup>
-                      <Label>Duelos Mano a Mano Ganados</Label>
-                      <Input
-                        type="number"
-                        value={selectedPlayer.duelosManoAManoGanados ?? ''}
-                        onChange={(e) => setSelectedPlayer(prev => ({ ...prev, duelosManoAManoGanados: e.target.value === '' ? null : parseInt(e.target.value) }))}
-                      />
-                    </FormGroup>
-                  </Col>
+                  <>
+                    <Col md="6">
+                      <FormGroup>
+                        <Label>Duelos Mano a Mano Ganados</Label>
+                        <Input
+                          type="number"
+                          value={selectedPlayer.duelosManoAManoGanados ?? ''}
+                          onChange={(e) => setSelectedPlayer(prev => ({ ...prev, duelosManoAManoGanados: e.target.value === '' ? null : parseInt(e.target.value) }))}
+                        />
+                      </FormGroup>
+                    </Col>
+                    <Col md="6">
+                      <FormGroup>
+                        <Label>Duelos Mano a Mano Totales</Label>
+                        <Input
+                          type="number"
+                          value={selectedPlayer.duelosManoAManoTotales ?? ''}
+                          onChange={(e) => setSelectedPlayer(prev => ({ ...prev, duelosManoAManoTotales: e.target.value === '' ? null : parseInt(e.target.value) }))}
+                        />
+                      </FormGroup>
+                    </Col>
+                    <Col md="12">
+                      <div className="text-center mt-3">
+                        <h4>Porcentaje: {selectedPlayer.duelosManoAManoTotales > 0 ? Math.round((selectedPlayer.duelosManoAManoGanados / selectedPlayer.duelosManoAManoTotales) * 100) : 0}%</h4>
+                      </div>
+                    </Col>
+                  </>
                 )}
+              </Row>
+            )}
+            {errorModal && (
+              <Row>
+                <Col md="12">
+                  <div style={{ color: 'red', fontWeight: 'bold', marginBottom: '1rem', textAlign: 'center' }}>
+                    {errorModal}
+                  </div>
+                </Col>
               </Row>
             )}
           </ModalBody>
