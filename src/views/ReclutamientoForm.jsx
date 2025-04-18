@@ -50,8 +50,8 @@ const ReclutamientoForm = ({ isOpen, toggle }) => {
         break;
       case 'altura':
         const altura = parseInt(value);
-        if (isNaN(altura) || altura < 170 || altura > 195) {
-          return 'La altura debe estar entre 170 y 195 cm';
+        if (isNaN(altura) || altura < 150 || altura > 210) {
+          return 'La altura debe estar entre 150 y 210 cm';
         }
         break;
       default:
@@ -285,15 +285,15 @@ const ReclutamientoForm = ({ isOpen, toggle }) => {
                 <Row>
                   <Col md={6}>
                     <FormGroup>
-                      <Label for="altura">Altura: {formData.altura || 170} cm</Label>
+                      <Label for="altura">Altura: {formData.altura || 150} cm</Label>
                       <Input 
                         type="range" 
                         name="altura" 
                         id="altura" 
-                        value={formData.altura || 170} 
+                        value={formData.altura || 150} 
                         onChange={handleChange} 
-                        min="170" 
-                        max="195" 
+                        min="150" 
+                        max="210" 
                         required 
                         style={{
                           width: '100%',
@@ -305,8 +305,8 @@ const ReclutamientoForm = ({ isOpen, toggle }) => {
                         }}
                       />
                       <div className="d-flex justify-content-between mt-1">
-                        <small style={{ color: '#6c757d' }}>170 cm</small>
-                        <small style={{ color: '#6c757d' }}>195 cm</small>
+                        <small style={{ color: '#6c757d' }}>150 cm</small>
+                        <small style={{ color: '#6c757d' }}>210 cm</small>
                       </div>
                       {errors.altura && <div className="text-danger">{errors.altura}</div>}
                     </FormGroup>
