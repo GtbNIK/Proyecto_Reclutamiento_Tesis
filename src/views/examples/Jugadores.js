@@ -193,7 +193,6 @@ const Jugadores = () => {
                     </th>
                     <th scope="col">Posición</th>
                     <th scope="col">Trayectoria</th>
-                    <th scope="col">Referencia</th>
                     <th scope="col">Valoración</th>
                   </tr>
                 </thead>
@@ -215,11 +214,6 @@ const Jugadores = () => {
                         <td>
                           <div style={{ maxWidth: '200px', whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>
                             {player.trayectoria}
-                          </div>
-                        </td>
-                        <td>
-                          <div style={{ maxWidth: '200px', whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>
-                            {player.referencia}
                           </div>
                         </td>
                         <td>{player.valoracion}</td>
@@ -316,16 +310,6 @@ const Jugadores = () => {
                     <div className="border rounded p-3" style={{ backgroundColor: '#f8f9fa' }}>
                       <pre style={{ whiteSpace: 'pre-wrap', fontFamily: 'inherit' }}>
                         {selectedPlayer.trayectoria}
-                      </pre>
-                    </div>
-                  </Col>
-                </Row>
-                <Row className="mt-3">
-                  <Col>
-                    <h5>Referencia</h5>
-                    <div className="border rounded p-3" style={{ backgroundColor: '#f8f9fa' }}>
-                      <pre style={{ whiteSpace: 'pre-wrap', fontFamily: 'inherit' }}>
-                        {selectedPlayer.referencia}
                       </pre>
                     </div>
                   </Col>

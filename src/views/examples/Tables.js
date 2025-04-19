@@ -77,7 +77,13 @@ const Tables = () => {
         const parsed = JSON.parse(saved);
         console.log('Datos parseados de localStorage:', JSON.stringify(parsed, null, 2));
         if (Object.keys(parsed).length > 0) {
-          return parsed;
+          // Limpiar las cédulas existentes
+          const cleanedPlayers = Object.entries(parsed).reduce((acc, [cedula, player]) => {
+            const cleanedCedula = cedula.replace(/[^0-9]/g, ''); // Quitar puntos, guiones y letras
+            acc[cleanedCedula] = { ...player, cedula: cleanedCedula }; // Actualizar cédula en el objeto
+            return acc;
+          }, {});
+          return cleanedPlayers;
         }
       } catch (error) {
         console.error('Error al parsear datos de localStorage:', error);
@@ -86,59 +92,54 @@ const Tables = () => {
     
     // Datos iniciales por defecto
     const initialData = {
-      "V-25.789.456": {
+      "25789456": { // Cédula sin puntos ni letras
         nombre: "Juan",
         apellido: "Pérez",
-        cedula: "V-25.789.456",
+        cedula: "25789456",
         edad: 19,
         altura: 175,
         posicion: "Delantero",
         trayectoria: "- Academia de Fútbol Juvenil (2019-2021)\n- Club Deportivo Regional (2021-2023)\n- Selección Estadal Sub-20 (2022)",
-        referencia: "Entrenador Carlos Martínez - Academia de Fútbol Juvenil\nTel: +58 412-1234567\nEmail: cmartinez@futboljuvenil.com",
         estado: "pendiente"
       },
-      "V-26.123.789": {
+      "26123789": { // Cédula sin puntos ni letras
         nombre: "Carlos",
         apellido: "Rodríguez",
-        cedula: "V-26.123.789",
+        cedula: "26123789",
         edad: 20,
         altura: 180,
         posicion: "Mediocampista",
         trayectoria: "- Escuela de Fútbol Caracas (2018-2020)\n- Club Atlético Municipal (2020-2023)\n- Participación en Torneo Nacional Sub-21 (2022)",
-        referencia: "Director Técnico José Ramírez - Club Atlético Municipal\nTel: +58 414-7654321\nEmail: jramirez@clubatletico.com",
         estado: "pendiente"
       },
-      "V-27.456.123": {
+      "27456123": {
         nombre: "Luis",
         apellido: "González",
-        cedula: "V-27.456.123",
+        cedula: "27456123",
         edad: 21,
         altura: 185,
         posicion: "Defensa",
         trayectoria: "- Escuela de Fútbol Miranda (2017-2019)\n- Club Deportivo Capital (2019-2023)\n- Selección Nacional Sub-20 (2021)",
-        referencia: "Entrenador Miguel Ángel Rojas - Club Deportivo Capital\nTel: +58 416-9876543\nEmail: mrojas@clubcapital.com",
         estado: "pendiente"
       },
-      "V-28.789.321": {
+      "28789321": {
         nombre: "Andrés",
         apellido: "Martínez",
-        cedula: "V-28.789.321",
+        cedula: "28789321",
         edad: 18,
         altura: 178,
         posicion: "Portero",
         trayectoria: "- Academia de Porteros Elite (2018-2020)\n- Club Atlético Valencia (2020-2023)\n- Selección Estadal Sub-19 (2022)",
-        referencia: "Entrenador de Porteros José Luis Fernández - Club Atlético Valencia\nTel: +58 424-5678901\nEmail: jlfernandez@clubvalencia.com",
         estado: "pendiente"
       },
-      "V-29.147.258": {
+      "29147258": {
         nombre: "Diego",
         apellido: "Hernández",
-        cedula: "V-29.147.258",
+        cedula: "29147258",
         edad: 20,
         altura: 182,
         posicion: "Lateral",
         trayectoria: "- Escuela de Fútbol Lara (2018-2020)\n- Club Deportivo Lara (2020-2023)\n- Selección Regional Sub-20 (2022)",
-        referencia: "Director Técnico Rafael Ortega - Club Deportivo Lara\nTel: +58 414-1234567\nEmail: rortega@clublara.com",
         estado: "pendiente"
       }
     };
@@ -545,13 +546,13 @@ const Tables = () => {
                       >
                         <td>
                           <span className="mb-0 text-sm">{player.nombre} {player.apellido}</span>
-                      </td>
+                        </td>
                         <td>{cedula}</td>
                         <td>{player.posicion}</td>
                         <td>
                           <Badge color="success">Aprobado</Badge>
-                      </td>
-                      <td>
+                        </td>
+                        <td>
                           <Button
                             color="warning"
                             size="lg"
@@ -562,8 +563,8 @@ const Tables = () => {
                           >
                             Volver
                           </Button>
-                      </td>
-                    </tr>
+                        </td>
+                      </tr>
                     ))
                   ) : (
                     <tr>
@@ -582,7 +583,7 @@ const Tables = () => {
                 Confirmar Pre-selección
               </Button>
             </Card>
-                      </div>
+          </div>
         </Row>
 
         {/* Modal de Confirmación de Pre-selección */}
@@ -724,18 +725,6 @@ const Tables = () => {
                             {selectedPlayer.trayectoria}
                           </pre>
                       </div>
-                      </FormGroup>
-                    </Col>
-                  </Row>
-                  <Row>
-                    <Col md="12">
-                      <FormGroup>
-                        <label className="form-control-label">Referencia</label>
-                        <div className="border rounded p-3" style={{ borderColor: '#e9ecef', backgroundColor: '#f8f9fa' }}>
-                          <pre className="mb-0" style={{ whiteSpace: 'pre-wrap', fontFamily: 'inherit' }}>
-                            {selectedPlayer.referencia}
-                          </pre>
-                        </div>
                       </FormGroup>
                     </Col>
                   </Row>
