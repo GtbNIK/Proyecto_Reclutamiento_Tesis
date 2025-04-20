@@ -4,7 +4,7 @@
 * Estadísticas Avanzadas de Fútbol
 =========================================================
 */
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import {
   Card,
   CardHeader,
@@ -33,11 +33,21 @@ const Sesiones = () => {
   const [sesionAEliminar, setSesionAEliminar] = useState(null);
   const [selectedPlayer, setSelectedPlayer] = useState(null);
   const [selectedStat, setSelectedStat] = useState(null);
-  const [sesiones, setSesiones] = useState([
+  const [sesiones, setSesiones] = useState(() => {
+    const saved = localStorage.getItem('sesionesEntrenamiento');
+    if (saved) {
+      try {
+        return JSON.parse(saved);
+      } catch (e) {
+        return [];
+      }
+    }
+    // Estado inicial si no hay nada guardado
+    return [
     {
       id: 1,
       titulo: "Sesión 1",
-      fecha: new Date().toISOString().split('T')[0],
+        fecha: new Date().toISOString().split('T')[0],
       tipo: "ofensiva",
       jugadores: Object.keys(jugadoresReclutados).map(cedula => ({
         cedula,
@@ -47,21 +57,27 @@ const Sesiones = () => {
         goles: 0,
         asistencias: 0,
         // Estadísticas avanzadas
-        pases: { completados: null, intentados: null, efectividad: null },
-        tiros: { alArco: null, total: null, precision: null, xG: null },
-        duelos: { ganados: null, total: null, porcentaje: null },
+          pases: { completados: null, intentados: null, efectividad: null },
+          tiros: { alArco: null, total: null, precision: null, xG: null },
+          duelos: { ganados: null, total: null, porcentaje: null },
         posesion: { recuperaciones: 0, perdidas: 0 },
-        centros: { completados: null, intentados: null, precision: null },
+          centros: { completados: null, intentados: null, precision: null },
         intercepciones: 0,
         bloqueos: 0
       }))
     }
-  ]);
+    ];
+  });
   const [editandoTitulo, setEditandoTitulo] = useState(null);
   const [nuevoTitulo, setNuevoTitulo] = useState("");
   const [nuevoTipoSesion, setNuevoTipoSesion] = useState("ofensiva");
   const [nuevaFecha, setNuevaFecha] = useState(""); // Estado para la nueva fecha
   const [errorModal, setErrorModal] = useState("");
+
+  // Guardar sesiones en LocalStorage cada vez que cambien
+  useEffect(() => {
+    localStorage.setItem('sesionesEntrenamiento', JSON.stringify(sesiones));
+  }, [sesiones]);
 
   // Definir las estadísticas relevantes por posición
   const estadisticasPorPosicion = {
@@ -310,44 +326,44 @@ const Sesiones = () => {
   const handlePasesChange = (e, field) => {
     const value = e.target.value === '' ? null : parseInt(e.target.value);
     setSelectedPlayer(prev => ({
-      ...prev,
-      pases: {
+          ...prev,
+          pases: {
         ...prev.pases,
         [field]: value
-      }
+          }
     }));
   };
 
   const handleTirosChange = (e, field) => {
     const value = e.target.value === '' ? null : parseInt(e.target.value);
     setSelectedPlayer(prev => ({
-      ...prev,
-      tiros: {
+          ...prev,
+          tiros: {
         ...prev.tiros,
         [field]: value
-      }
+          }
     }));
   };
 
   const handleDuelosChange = (e, field) => {
     const value = e.target.value === '' ? null : parseInt(e.target.value);
     setSelectedPlayer(prev => ({
-      ...prev,
-      duelos: {
+          ...prev,
+          duelos: {
         ...prev.duelos,
         [field]: value
-      }
+          }
     }));
   };
 
   const handleCentrosChange = (e, field) => {
     const value = e.target.value === '' ? null : parseInt(e.target.value);
     setSelectedPlayer(prev => ({
-      ...prev,
-      centros: {
+          ...prev,
+          centros: {
         ...prev.centros,
         [field]: value
-      }
+          }
     }));
   };
 
