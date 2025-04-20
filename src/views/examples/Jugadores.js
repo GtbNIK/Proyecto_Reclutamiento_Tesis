@@ -5,7 +5,7 @@
 * Sistema de Gestión de Jugadores Reclutados
 =========================================================
 */
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import { 
   Card,
   CardHeader,
@@ -40,6 +40,22 @@ const Jugadores = () => {
     key: null,
     direction: 'ascending'
   });
+
+  // Sincronizar contexto con el backend
+  useEffect(() => {
+    fetch('http://localhost:5000/api/jugadores')
+      .then(res => res.json())
+      .then(data => {
+        // Solo jugadores aprobados
+        const aprobados = data.filter(j => j.estado === 'aprobado');
+        // Convertir a objeto por cédula
+        const jugadoresObj = {};
+        aprobados.forEach(j => {
+          jugadoresObj[j.cedula] = j;
+        });
+        setJugadoresReclutados(jugadoresObj);
+      });
+  }, [setJugadoresReclutados]);
 
   // Función para ordenar los jugadores
   const sortedPlayers = React.useMemo(() => {
@@ -84,11 +100,11 @@ const Jugadores = () => {
       : <i className="fas fa-sort-down" />;
   };
 
-  // Filtrar jugadores
+  // Filtrar solo jugadores aprobados
   const filteredPlayers = sortedPlayers.filter(([cedula, player]) => {
     const termLower = searchTerm.toLowerCase();
     const fullName = `${player.nombre} ${player.apellido}`.toLowerCase();
-    return fullName.includes(termLower) || cedula.includes(searchTerm);
+    return (player.estado === "aprobado") && (fullName.includes(termLower) || cedula.includes(searchTerm));
   });
 
   const handlePlayerClick = (cedula) => {
@@ -101,7 +117,11 @@ const Jugadores = () => {
     setModalEliminarOpen(true);
   };
 
-  const confirmarEliminacion = () => {
+  const confirmarEliminacion = async () => {
+    // Eliminar en la base de datos
+    await fetch(`http://localhost:5000/api/jugadores/${jugadorAEliminar}`, {
+      method: 'DELETE',
+    });
     const nuevosJugadores = { ...jugadoresReclutados };
     const jugadorRestaurado = nuevosJugadores[jugadorAEliminar];
     delete nuevosJugadores[jugadorAEliminar];
@@ -116,6 +136,17 @@ const Jugadores = () => {
       };
       localStorage.setItem('solicitudesJugadores', JSON.stringify(solicitudesObj));
     }
+    // Recargar la lista de jugadores aprobados desde el backend
+    fetch('http://localhost:5000/api/jugadores')
+      .then(res => res.json())
+      .then(data => {
+        const aprobados = data.filter(j => j.estado === 'aprobado');
+        const jugadoresObj = {};
+        aprobados.forEach(j => {
+          jugadoresObj[j.cedula] = j;
+        });
+        setJugadoresReclutados(jugadoresObj);
+      });
     setModalEliminarOpen(false);
     setJugadorAEliminar(null);
   };
@@ -192,8 +223,8 @@ const Jugadores = () => {
                       Cédula {getSortIcon('cedula')}
                     </th>
                     <th scope="col">Posición</th>
-                    <th scope="col">Trayectoria</th>
-                    <th scope="col">Valoración</th>
+                    <th scope="col">Edad</th>
+                    <th scope="col">Altura</th>
                   </tr>
                 </thead>
                 <tbody>
@@ -211,12 +242,8 @@ const Jugadores = () => {
                         </td>
                         <td>{cedula}</td>
                         <td>{player.posicion}</td>
-                        <td>
-                          <div style={{ maxWidth: '200px', whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>
-                            {player.trayectoria}
-                          </div>
-                        </td>
-                        <td>{player.valoracion}</td>
+                        <td>{player.edad}</td>
+                        <td>{player.altura}</td>
                       </tr>
                     ))
                   ) : (
@@ -287,34 +314,98 @@ const Jugadores = () => {
           className="modal-dialog-centered modal-lg"
         >
           <ModalHeader toggle={() => setModalOpen(false)}>
-            Detalles del Jugador
+            Información del Jugador
           </ModalHeader>
           <ModalBody>
             {selectedPlayer && (
-              <div className="pl-4 pr-4">
-                <Row>
-                  <Col md="6">
-                    <h5>Nombre: {selectedPlayer.nombre} {selectedPlayer.apellido}</h5>
-                    <p>Cédula: {selectedPlayer.cedula}</p>
-                    <p>Edad: {selectedPlayer.edad} años</p>
-                  </Col>
-                  <Col md="6">
-                    <h5>Posición: {selectedPlayer.posicion}</h5>
-                    <p>Altura: {selectedPlayer.altura} cm</p>
-                  </Col>
-                </Row>
-                <hr />
-                <Row>
-                  <Col>
-                    <h5>Trayectoria</h5>
-                    <div className="border rounded p-3" style={{ backgroundColor: '#f8f9fa' }}>
-                      <pre style={{ whiteSpace: 'pre-wrap', fontFamily: 'inherit' }}>
-                        {selectedPlayer.trayectoria}
-                      </pre>
-                    </div>
-                  </Col>
-                </Row>
-              </div>
+              <Card>
+                <CardBody>
+                  <Row>
+                    <Col md="6">
+                      <FormGroup>
+                        <label className="form-control-label">Nombre</label>
+                        <div className="h4 font-weight-normal border rounded p-3" style={{ borderColor: '#e9ecef' }}>
+                          {selectedPlayer.nombre}
+                        </div>
+                      </FormGroup>
+                    </Col>
+                    <Col md="6">
+                      <FormGroup>
+                        <label className="form-control-label">Apellido</label>
+                        <div className="h4 font-weight-normal border rounded p-3" style={{ borderColor: '#e9ecef' }}>
+                          {selectedPlayer.apellido}
+                        </div>
+                      </FormGroup>
+                    </Col>
+                  </Row>
+                  <Row>
+                    <Col md="4">
+                      <FormGroup>
+                        <label className="form-control-label">Cédula</label>
+                        <div className="h4 font-weight-normal border rounded p-3" style={{ borderColor: '#e9ecef' }}>
+                          {selectedPlayer.cedula}
+                        </div>
+                      </FormGroup>
+                    </Col>
+                    <Col md="4">
+                      <FormGroup>
+                        <label className="form-control-label">Edad</label>
+                        <div className="h4 font-weight-normal border rounded p-3" style={{ borderColor: '#e9ecef' }}>
+                          {selectedPlayer.edad} años
+                        </div>
+                      </FormGroup>
+                    </Col>
+                    <Col md="4">
+                      <FormGroup>
+                        <label className="form-control-label">Altura</label>
+                        <div className="h4 font-weight-normal border rounded p-3" style={{ borderColor: '#e9ecef' }}>
+                          {selectedPlayer.altura} cm
+                        </div>
+                      </FormGroup>
+                    </Col>
+                  </Row>
+                  <Row>
+                    <Col md="6">
+                      <FormGroup>
+                        <label className="form-control-label">Posición</label>
+                        <div className="h4 font-weight-normal border rounded p-3" style={{ borderColor: '#e9ecef', fontSize: '1.1rem', maxWidth: '180px', minWidth: '100px'}}>
+                          {selectedPlayer.posicion}
+                        </div>
+                      </FormGroup>
+                    </Col>
+                    <Col md="6">
+                      <FormGroup>
+                        <label className="form-control-label">Especialización</label>
+                        <div className="h4 font-weight-normal border rounded p-3" style={{ borderColor: '#e9ecef', fontSize: '1.1rem', minWidth: '100px' }}>
+                          {selectedPlayer.piernaHabil}
+                        </div>
+                      </FormGroup>
+                    </Col>
+                  </Row>
+                  <Row>
+                    <Col md="12">
+                      <FormGroup>
+                        <label className="form-control-label">Pierna Hábil</label>
+                        <div className="h4 font-weight-normal border rounded p-3" style={{ borderColor: '#e9ecef' }}>
+                          {selectedPlayer.piernaHabil ? selectedPlayer.piernaHabil : 'No especificado'}
+                        </div>
+                      </FormGroup>
+                    </Col>
+                  </Row>
+                  <Row>
+                    <Col md="12">
+                      <FormGroup>
+                        <label className="form-control-label">Trayectoria</label>
+                        <div className="border rounded p-3" style={{ borderColor: '#e9ecef', backgroundColor: '#f8f9fa' }}>
+                          <pre className="mb-0" style={{ whiteSpace: 'pre-wrap', fontFamily: 'inherit' }}>
+                            {selectedPlayer.trayectoria}
+                          </pre>
+                        </div>
+                      </FormGroup>
+                    </Col>
+                  </Row>
+                </CardBody>
+              </Card>
             )}
           </ModalBody>
           <ModalFooter>

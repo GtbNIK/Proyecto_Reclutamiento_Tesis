@@ -117,7 +117,8 @@ const ReclutamientoForm = ({ isOpen, toggle }) => {
       especializacion: formData.especializacion,
       altura: parseInt(formData.altura, 10),
       trayectoria: formData.trayectoria,
-      piernaHabil: formData.piernaHabil
+      piernaHabil: formData.piernaHabil,
+      estado: "pendiente"
     };
 
     try {

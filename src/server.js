@@ -41,6 +41,46 @@ app.post('/api/jugadores', (req, res) => {
     });
 });
 
+// Ruta para obtener todos los jugadores
+app.get('/api/jugadores', (req, res) => {
+    const query = 'SELECT * FROM jugadores';
+    db.query(query, (err, results) => {
+        if (err) {
+            console.error("Error al obtener jugadores:", err);
+            return res.status(500).send({ error: "Error al obtener jugadores", details: err });
+        }
+        res.json(results); // <-- Esto devuelve un array de jugadores
+    });
+});
+
+// Ruta para actualizar el estado de un jugador
+app.put('/api/jugadores/:cedula', (req, res) => {
+    const { cedula } = req.params;
+    const { estado } = req.body;
+    console.log('Actualizando jugador:', cedula, 'a estado:', estado);
+    const query = 'UPDATE jugadores SET estado = ? WHERE cedula = ?';
+    db.query(query, [estado, cedula], (err, result) => {
+        if (err) {
+            console.error("Error al actualizar el estado:", err);
+            return res.status(500).send({ error: "Error al actualizar el estado", details: err });
+        }
+        res.send({ success: true });
+    });
+});
+
+// Ruta para eliminar un jugador por cédula
+app.delete('/api/jugadores/:cedula', (req, res) => {
+    const { cedula } = req.params;
+    const query = 'DELETE FROM jugadores WHERE cedula = ?';
+    db.query(query, [cedula], (err, result) => {
+        if (err) {
+            console.error("Error al eliminar jugador:", err);
+            return res.status(500).send({ error: "Error al eliminar jugador", details: err });
+        }
+        res.send({ success: true });
+    });
+});
+
 // Iniciar el servidor
 app.listen(port, () => {
     console.log(`Servidor corriendo en http://localhost:${port}`);

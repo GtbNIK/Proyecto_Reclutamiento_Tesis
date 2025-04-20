@@ -62,127 +62,181 @@ const hoverStyles = `
 `;
 
 const Tables = () => {
+  const [players, setPlayers] = useState([]);
+  const [filteredPlayers, setFilteredPlayers] = useState({ solicitudes: [], preSeleccion: [] });
+  const [searchTerm, setSearchTerm] = useState("");
   const [modalOpen, setModalOpen] = useState(false);
   const [selectedPlayer, setSelectedPlayer] = useState(null);
-  const { agregarJugadores } = useJugadores();
-  const [searchTerm, setSearchTerm] = useState("");
   const [deleteModalOpen, setDeleteModalOpen] = useState(false);
   const [playerToDelete, setPlayerToDelete] = useState(null);
-  const [players, setPlayers] = useState(() => {
-    const saved = localStorage.getItem('solicitudesJugadores');
-    console.log('Datos cargados de localStorage (raw):', saved);
-    
-    if (saved && saved !== '{}') {
-      try {
-        const parsed = JSON.parse(saved);
-        console.log('Datos parseados de localStorage:', JSON.stringify(parsed, null, 2));
-        if (Object.keys(parsed).length > 0) {
-          // Limpiar las cédulas existentes
-          const cleanedPlayers = Object.entries(parsed).reduce((acc, [cedula, player]) => {
-            const cleanedCedula = cedula.replace(/[^0-9]/g, ''); // Quitar puntos, guiones y letras
-            acc[cleanedCedula] = { ...player, cedula: cleanedCedula }; // Actualizar cédula en el objeto
-            return acc;
-          }, {});
-          return cleanedPlayers;
-        }
-      } catch (error) {
-        console.error('Error al parsear datos de localStorage:', error);
-      }
-    }
-    
-    // Datos iniciales por defecto
-    const initialData = {
-      "25789456": { // Cédula sin puntos ni letras
-      nombre: "Juan",
-      apellido: "Pérez",
-        cedula: "25789456",
-      edad: 19,
-      altura: 175,
-      posicion: "Delantero",
-      trayectoria: "- Academia de Fútbol Juvenil (2019-2021)\n- Club Deportivo Regional (2021-2023)\n- Selección Estadal Sub-20 (2022)",
-        estado: "pendiente"
-    },
-      "26123789": { // Cédula sin puntos ni letras
-      nombre: "Carlos",
-      apellido: "Rodríguez",
-        cedula: "26123789",
-      edad: 20,
-      altura: 180,
-      posicion: "Mediocampista",
-      trayectoria: "- Escuela de Fútbol Caracas (2018-2020)\n- Club Atlético Municipal (2020-2023)\n- Participación en Torneo Nacional Sub-21 (2022)",
-        estado: "pendiente"
-      },
-      "27456123": {
-        nombre: "Luis",
-        apellido: "González",
-        cedula: "27456123",
-        edad: 21,
-        altura: 185,
-        posicion: "Defensa",
-        trayectoria: "- Escuela de Fútbol Miranda (2017-2019)\n- Club Deportivo Capital (2019-2023)\n- Selección Nacional Sub-20 (2021)",
-        estado: "pendiente"
-      },
-      "28789321": {
-        nombre: "Andrés",
-        apellido: "Martínez",
-        cedula: "28789321",
-        edad: 18,
-        altura: 178,
-        posicion: "Portero",
-        trayectoria: "- Academia de Porteros Elite (2018-2020)\n- Club Atlético Valencia (2020-2023)\n- Selección Estadal Sub-19 (2022)",
-        estado: "pendiente"
-      },
-      "29147258": {
-        nombre: "Diego",
-        apellido: "Hernández",
-        cedula: "29147258",
-        edad: 20,
-        altura: 182,
-        posicion: "Lateral",
-        trayectoria: "- Escuela de Fútbol Lara (2018-2020)\n- Club Deportivo Lara (2020-2023)\n- Selección Regional Sub-20 (2022)",
-        estado: "pendiente"
-      },
-      "29500123": {
-        nombre: "Miguel",
-        apellido: "Sánchez",
-        cedula: "29500123",
-        edad: 22,
-        altura: 186,
-        posicion: "Portero",
-        trayectoria: "- Academia de Porteros Elite (2017-2019)\n- Club Deportivo Central (2019-2022)\n- Selección Nacional Sub-23 (2021)",
-      estado: "pendiente"
-    }
-    };
-    
-    console.log('Usando datos iniciales:', JSON.stringify(initialData, null, 2));
-    return initialData;
-  });
-
-  // Guardar en localStorage cuando cambien los datos
-  useEffect(() => {
-    console.log('Guardando jugadores en localStorage:', JSON.stringify(players, null, 2));
-    localStorage.setItem('solicitudesJugadores', JSON.stringify(players));
-  }, [players]);
-
-  // Estado para el modal de confirmación
   const [confirmModalOpen, setConfirmModalOpen] = useState(false);
+  const [formModalOpen, setFormModalOpen] = useState(false);
+  const toggleFormModal = () => setFormModalOpen(!formModalOpen);
+  const { agregarJugadores, setJugadoresReclutados } = useJugadores();
+
+  // Borrar datos de localStorage al cargar el componente
+  useEffect(() => {
+    localStorage.removeItem('solicitudesJugadores');
+  }, []);
+
+  // Obtener jugadores desde la base de datos al montar el componente
+  useEffect(() => {
+    fetch('http://localhost:5000/api/jugadores')
+      .then(res => res.json())
+      .then(data => {
+        setPlayers(data);
+      })
+      .catch(err => console.error("Error al obtener jugadores:", err));
+  }, []);
+
+  // Filtrar jugadores por estado y búsqueda
+  useEffect(() => {
+    const termLower = searchTerm.toLowerCase();
+    const solicitudes = players.filter(
+      player =>
+        (player.nombre + " " + player.apellido).toLowerCase().includes(termLower) ||
+        player.cedula.includes(searchTerm)
+    ).filter(player => player.estado === "pendiente" || !player.estado);
+
+    const preSeleccion = players.filter(
+      player =>
+        ((player.nombre + " " + player.apellido).toLowerCase().includes(termLower) ||
+        player.cedula.includes(searchTerm)) &&
+        player.estado === "preseleccionado"
+    );
+
+    setFilteredPlayers({ solicitudes, preSeleccion });
+  }, [players, searchTerm]);
+
+  // Función para manejar la aprobación de un jugador
+  const handleApprove = async (cedula) => {
+    // Cambia en el backend
+    await fetch(`http://localhost:5000/api/jugadores/${cedula}`, {
+      method: 'PUT',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ estado: 'preseleccionado' })
+    });
+
+    // Cambia en el frontend
+    setPlayers(prevPlayers => prevPlayers.map(player =>
+      player.cedula === cedula ? { ...player, estado: "preseleccionado" } : player
+    ));
+  };
+
+  // Función para manejar el retorno de un jugador a solicitudes
+  const handleReturn = async (cedula) => {
+    // Cambia en el backend
+    await fetch(`http://localhost:5000/api/jugadores/${cedula}`, {
+      method: 'PUT',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ estado: 'pendiente' })
+    });
+
+    // Cambia en el frontend
+    setPlayers(prevPlayers => prevPlayers.map(player =>
+      player.cedula === cedula ? { ...player, estado: "pendiente" } : player
+    ));
+  };
+
+  // Función para manejar el descarte de un jugador
+  const handleDiscard = (cedula) => {
+    setPlayers(prevPlayers => prevPlayers.map(player =>
+      player.cedula === cedula ? { ...player, estado: "descartado" } : player
+    ));
+  };
+
+  // Función para manejar la eliminación de un jugador
+  const handleDeletePlayer = async () => {
+    if (playerToDelete) {
+      // Eliminar en la base de datos
+      await fetch(`http://localhost:5000/api/jugadores/${playerToDelete}`, {
+        method: 'DELETE',
+      });
+      // Eliminar en el frontend
+      setPlayers(prevPlayers => prevPlayers.filter(player => player.cedula !== playerToDelete));
+      setDeleteModalOpen(false);
+      // Recargar la lista desde el backend para asegurar sincronización
+      fetch('http://localhost:5000/api/jugadores')
+        .then(res => res.json())
+        .then(data => {
+          setPlayers(data);
+          // Sincronizar contexto de jugadores reclutados (solo aprobados)
+          const aprobados = data.filter(j => j.estado === 'aprobado');
+          const jugadoresObj = {};
+          aprobados.forEach(j => {
+            jugadoresObj[j.cedula] = j;
+          });
+          setJugadoresReclutados(jugadoresObj);
+        });
+    }
+  };
+
+  // Función para agregar un nuevo jugador (opcional, si usas el modal de reclutamiento)
+  const addPlayer = (newPlayer) => {
+    setPlayers((prevPlayers) => ([
+      ...prevPlayers,
+      { ...newPlayer, estado: "pendiente" },
+    ]));
+  };
+
+  // Agregar los estilos al componente
+  React.useEffect(() => {
+    const style = document.createElement('style');
+    style.textContent = hoverStyles;
+    document.head.appendChild(style);
+    return () => {
+      document.head.removeChild(style);
+    };
+  }, []);
+
+  const handlePlayerClick = (cedula) => {
+    const jugador = players.find(player => player.cedula === cedula);
+    setSelectedPlayer(jugador);
+    setModalOpen(true);
+  };
+
+  const handleConfirmPreSelection = async () => {
+    // Obtener todos los jugadores preseleccionados
+    const jugadoresPreseleccionados = players.filter(player => player.estado === "preseleccionado");
+
+    // Actualizar en la base de datos
+    await Promise.all(jugadoresPreseleccionados.map(jugador =>
+      fetch(`http://localhost:5000/api/jugadores/${jugador.cedula}`, {
+        method: 'PUT',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ estado: 'aprobado' })
+      })
+    ));
+
+    // Cambiar en el frontend
+    setPlayers(prevPlayers =>
+      prevPlayers.map(player =>
+        player.estado === "preseleccionado"
+          ? { ...player, estado: "aprobado" }
+          : player
+      )
+    );
+
+    setConfirmModalOpen(false);
+
+    // Recargar la lista desde el backend para asegurar sincronización
+    fetch('http://localhost:5000/api/jugadores')
+      .then(res => res.json())
+      .then(data => {
+        setPlayers(data);
+        // Sincronizar contexto de jugadores reclutados (solo aprobados)
+        const aprobados = data.filter(j => j.estado === 'aprobado');
+        const jugadoresObj = {};
+        aprobados.forEach(j => {
+          jugadoresObj[j.cedula] = j;
+        });
+        setJugadoresReclutados(jugadoresObj);
+      });
+  };
 
   const [sortConfig, setSortConfig] = useState({
     key: null,
     direction: 'ascending'
-  });
-
-  // Estado para los jugadores filtrados
-  const [filteredPlayers, setFilteredPlayers] = useState(() => {
-    console.log('Inicializando filteredPlayers con players:', JSON.stringify(players, null, 2));
-    const sortedPlayersList = Object.entries(players);
-    console.log('Lista de jugadores ordenada:', JSON.stringify(sortedPlayersList, null, 2));
-    const solicitudes = sortedPlayersList.filter(([_, player]) => player.estado === "pendiente");
-    console.log('Solicitudes filtradas:', JSON.stringify(solicitudes, null, 2));
-    return {
-      solicitudes: solicitudes,
-      preSeleccion: sortedPlayersList.filter(([_, player]) => player.estado === "aprobado")
-    };
   });
 
   // Función para ordenar los jugadores
@@ -228,140 +282,6 @@ const Tables = () => {
       ? <i className="fas fa-sort-up" /> 
       : <i className="fas fa-sort-down" />;
   };
-
-  // Función para filtrar jugadores
-  const filterPlayers = (term) => {
-    const termLower = term.toLowerCase();
-    const sortedPlayersList = Object.entries(sortedPlayers);
-    console.log('Jugadores ordenados:', sortedPlayersList);
-    
-    // Filtrar jugadores de solicitudes (estado pendiente)
-    const solicitudesFiltered = sortedPlayersList
-      .filter(([cedula, player]) => {
-        const fullName = `${player.nombre} ${player.apellido}`.toLowerCase();
-        const matches = (fullName.includes(termLower) || cedula.includes(term)) && player.estado === "pendiente";
-        console.log(`Jugador ${fullName} (${cedula}) - Estado: ${player.estado} - Coincide: ${matches}`);
-        return matches;
-      });
-
-    console.log('Solicitudes después de filtrar:', solicitudesFiltered);
-
-    // Filtrar jugadores de pre-selección (estado aprobado)
-    const preSeleccionFiltered = sortedPlayersList
-      .filter(([cedula, player]) => {
-        const fullName = `${player.nombre} ${player.apellido}`.toLowerCase();
-        return (fullName.includes(termLower) || cedula.includes(term)) && player.estado === "aprobado";
-      });
-
-    return {
-      solicitudes: solicitudesFiltered,
-      preSeleccion: preSeleccionFiltered
-    };
-  };
-
-  // Efecto para actualizar los jugadores filtrados
-  React.useEffect(() => {
-    console.log('Efecto ejecutado - searchTerm:', searchTerm);
-    const filtered = filterPlayers(searchTerm);
-    console.log('Resultado del filtrado:', filtered);
-    setFilteredPlayers(filtered);
-  }, [searchTerm, sortedPlayers]);
-
-  // Función para manejar la aprobación de un jugador
-  const handleApprove = (cedula) => {
-    setPlayers(prevPlayers => ({
-      ...prevPlayers,
-      [cedula]: {
-        ...prevPlayers[cedula],
-        estado: "aprobado"
-      }
-    }));
-  };
-
-  const handleDeletePlayer = () => {
-    if (playerToDelete) {
-      setPlayers(prevPlayers => {
-        const updatedPlayers = { ...prevPlayers };
-        delete updatedPlayers[playerToDelete]; // Elimina al jugador
-        return updatedPlayers;
-      });
-      setDeleteModalOpen(false); // Cierra el modal
-    }
-  };
-
-  // Función para manejar el descarte de un jugador
-  const handleDiscard = (cedula) => {
-    setPlayers(prevPlayers => ({
-      ...prevPlayers,
-      [cedula]: {
-        ...prevPlayers[cedula],
-        estado: "descartado"
-      }
-    }));
-  };
-
-  // Función para manejar el retorno de un jugador a solicitudes
-  const handleReturn = (cedula) => {
-    setPlayers(prevPlayers => ({
-      ...prevPlayers,
-      [cedula]: {
-        ...prevPlayers[cedula],
-        estado: "pendiente"
-      }
-    }));
-  };
-
-  // Agregar los estilos al componente
-  React.useEffect(() => {
-    const style = document.createElement('style');
-    style.textContent = hoverStyles;
-    document.head.appendChild(style);
-    return () => {
-      document.head.removeChild(style);
-    };
-  }, []);
-
-  const handlePlayerClick = (cedula) => {
-    setSelectedPlayer(players[cedula]);
-    setModalOpen(true);
-  };
-
-  const handleConfirmPreSelection = () => {
-    // Obtener todos los jugadores aprobados
-    const jugadoresAprobados = Object.fromEntries(
-      Object.entries(players).filter(([_, player]) => player.estado === "aprobado")
-    );
-    
-    // Agregar a jugadores reclutados
-    agregarJugadores(jugadoresAprobados);
-    
-    // Eliminar PERMANENTEMENTE de la lista actual
-    setPlayers(prevPlayers => {
-      const updatedPlayers = { ...prevPlayers };
-      Object.keys(jugadoresAprobados).forEach(cedula => {
-        delete updatedPlayers[cedula];
-      });
-      return updatedPlayers;
-    });
-    
-    setConfirmModalOpen(false);
-  };
-
-  const [formModalOpen, setFormModalOpen] = useState(false);
-  const toggleFormModal = () => setFormModalOpen(!formModalOpen);
-
-  // Función para agregar un nuevo jugador
-  const addPlayer = (newPlayer) => {
-    setPlayers((prevPlayers) => ({
-      ...prevPlayers,
-      [newPlayer.cedula]: {
-        ...newPlayer,
-        estado: "pendiente", // Estado inicial
-      },
-    }));
-  };
-
-  
 
   return (
     <>
@@ -443,12 +363,12 @@ const Tables = () => {
                 </thead>
                 <tbody>
                     {filteredPlayers.solicitudes.length > 0 ? (
-                      filteredPlayers.solicitudes.map(([cedula, player]) => (
+                      filteredPlayers.solicitudes.map((player) => (
                     <tr 
-                      key={cedula}
+                      key={player.cedula}
                       style={{ cursor: 'pointer' }} 
                       className="hover-row"
-                      onClick={() => handlePlayerClick(cedula)}
+                      onClick={() => handlePlayerClick(player.cedula)}
                     >
                           <td className="align-middle">
                             <span className="mb-0 text-sm font-weight-bold">
@@ -456,7 +376,7 @@ const Tables = () => {
                             </span>
                           </td>
                           <td className="align-middle">
-                            <span className="mb-0 text-sm">{cedula}</span>
+                            <span className="mb-0 text-sm">{player.cedula}</span>
                           </td>
                           <td className="align-middle">
                             <span className="mb-0 text-sm">{player.posicion}</span>
@@ -468,9 +388,9 @@ const Tables = () => {
                               color="success"
                                   size="sm"
                               className="mr-2"
-                              onClick={(e) => {
+                              onClick={async (e) => {
                                 e.preventDefault();
-                                handleApprove(cedula);
+                                await handleApprove(player.cedula);
                               }}
                             >
                               <i className="fas fa-check" />
@@ -481,7 +401,7 @@ const Tables = () => {
                               onClick={(e) => {
                                 e.preventDefault();
                                 e.stopPropagation();
-                                    setPlayerToDelete(cedula);
+                                    setPlayerToDelete(player.cedula);
                                     setDeleteModalOpen(true);
                               }}
                             >
@@ -547,17 +467,17 @@ const Tables = () => {
                 </thead>
                 <tbody>
                   {filteredPlayers.preSeleccion.length > 0 ? (
-                    filteredPlayers.preSeleccion.map(([cedula, player]) => (
+                    filteredPlayers.preSeleccion.map((player) => (
                     <tr 
-                      key={cedula}
+                      key={player.cedula}
                       style={{ cursor: 'pointer' }} 
                       className="hover-row"
-                      onClick={() => handlePlayerClick(cedula)}
+                      onClick={() => handlePlayerClick(player.cedula)}
                     >
                       <td>
                         <span className="mb-0 text-sm">{player.nombre} {player.apellido}</span>
                     </td>
-                      <td>{cedula}</td>
+                      <td>{player.cedula}</td>
                       <td>{player.posicion}</td>
                       <td>
                         <Badge color="success">Aprobado</Badge>
@@ -566,9 +486,9 @@ const Tables = () => {
                         <Button
                           color="warning"
                           size="lg"
-                          onClick={(e) => {
+                          onClick={async (e) => {
                             e.stopPropagation(); // Evitar que el clic en el botón abra la carta
-                            handleReturn(cedula);
+                            await handleReturn(player.cedula);
                           }}
                         >
                           Volver
@@ -711,7 +631,7 @@ const Tables = () => {
                       <FormGroup>
                         <label className="form-control-label">Especialización</label>
                         <div className="h4 font-weight-normal border rounded p-3" style={{ borderColor: '#e9ecef', fontSize: '1.1rem', minWidth: '100px' }}>
-                          {/* Por ahora vacío */}
+                          {selectedPlayer.piernaHabil}
                         </div>
                       </FormGroup>
                     </Col>
