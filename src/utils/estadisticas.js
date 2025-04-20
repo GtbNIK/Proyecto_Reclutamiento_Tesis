@@ -31,30 +31,36 @@ function consolidarEstadisticasPorJugador(sesiones, jugadoresReclutados) {
   sesiones.forEach(sesion => {
     sesion.jugadores.forEach(jugador => {
       const cedula = jugador.cedula;
-      const esPortero = jugador.posicion && jugador.posicion.toLowerCase().includes('portero');
+      const posicion = jugador.posicion || (jugadoresReclutados[cedula]?.posicion || '').toLowerCase();
+      const esPortero = posicion && posicion.includes('portero');
       const target = esPortero ? porteros : jugadoresCampo;
       if (!target[cedula]) return;
       target[cedula].sesiones += 1;
-      target[cedula].goles += jugador.goles || 0;
-      target[cedula].asistencias += jugador.asistencias || 0;
-      target[cedula].duelosGanados += jugador.duelos?.ganados || 0;
-      target[cedula].duelosTotales += jugador.duelos?.total || 0;
-      target[cedula].pasesCompletados += jugador.pases?.completados || 0;
-      target[cedula].pasesIntentados += jugador.pases?.intentados || 0;
-      target[cedula].recuperaciones += jugador.posesion?.recuperaciones || 0;
-      target[cedula].perdidas += jugador.posesion?.perdidas || 0;
-      target[cedula].intercepciones += jugador.intercepciones || 0;
-      target[cedula].bloqueos += jugador.bloqueos || 0;
-      target[cedula].centrosCompletados += jugador.centros?.completados || 0;
-      target[cedula].centrosIntentados += jugador.centros?.intentados || 0;
-      target[cedula].tirosAlArco += jugador.tiros?.alArco || 0;
-      target[cedula].tirosTotales += jugador.tiros?.total || 0;
-      target[cedula].paradasRealizadas += jugador.paradasRealizadas || 0;
-      target[cedula].tirosAPorteria += jugador.tirosAPorteria || 0;
-      target[cedula].golesConcedidos += (jugador.tirosAPorteria || 0) - (jugador.paradasRealizadas || 0);
-      target[cedula].pasesExitososPortero += jugador.pasesExitososPortero || 0;
-      target[cedula].duelosManoAManoGanados += jugador.duelosManoAManoGanados || 0;
-      target[cedula].duelosManoAManoTotales += jugador.duelosManoAManoTotales || 0;
+      if (esPortero) {
+        // Solo sumar campos de portero
+        target[cedula].paradasRealizadas += jugador.paradasRealizadas || 0;
+        target[cedula].tirosAPorteria += jugador.tirosAPorteria || 0;
+        target[cedula].golesConcedidos += (jugador.tirosAPorteria || 0) - (jugador.paradasRealizadas || 0);
+        target[cedula].pasesExitososPortero += jugador.pasesExitososPortero || 0;
+        target[cedula].duelosManoAManoGanados += jugador.duelosManoAManoGanados || 0;
+        target[cedula].duelosManoAManoTotales += jugador.duelosManoAManoTotales || 0;
+      } else {
+        // Solo sumar campos de jugador de campo
+        target[cedula].goles += jugador.goles || 0;
+        target[cedula].asistencias += jugador.asistencias || 0;
+        target[cedula].duelosGanados += jugador.duelos?.ganados || 0;
+        target[cedula].duelosTotales += jugador.duelos?.total || 0;
+        target[cedula].pasesCompletados += jugador.pases?.completados || 0;
+        target[cedula].pasesIntentados += jugador.pases?.intentados || 0;
+        target[cedula].recuperaciones += jugador.posesion?.recuperaciones || 0;
+        target[cedula].perdidas += jugador.posesion?.perdidas || 0;
+        target[cedula].intercepciones += jugador.intercepciones || 0;
+        target[cedula].bloqueos += jugador.bloqueos || 0;
+        target[cedula].centrosCompletados += jugador.centros?.completados || 0;
+        target[cedula].centrosIntentados += jugador.centros?.intentados || 0;
+        target[cedula].tirosAlArco += jugador.tiros?.alArco || 0;
+        target[cedula].tirosTotales += jugador.tiros?.total || 0;
+      }
     });
   });
 

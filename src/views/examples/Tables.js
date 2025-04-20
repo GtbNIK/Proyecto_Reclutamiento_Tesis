@@ -93,23 +93,23 @@ const Tables = () => {
     // Datos iniciales por defecto
     const initialData = {
       "25789456": { // Cédula sin puntos ni letras
-        nombre: "Juan",
-        apellido: "Pérez",
+      nombre: "Juan",
+      apellido: "Pérez",
         cedula: "25789456",
-        edad: 19,
-        altura: 175,
-        posicion: "Delantero",
-        trayectoria: "- Academia de Fútbol Juvenil (2019-2021)\n- Club Deportivo Regional (2021-2023)\n- Selección Estadal Sub-20 (2022)",
+      edad: 19,
+      altura: 175,
+      posicion: "Delantero",
+      trayectoria: "- Academia de Fútbol Juvenil (2019-2021)\n- Club Deportivo Regional (2021-2023)\n- Selección Estadal Sub-20 (2022)",
         estado: "pendiente"
-      },
+    },
       "26123789": { // Cédula sin puntos ni letras
-        nombre: "Carlos",
-        apellido: "Rodríguez",
+      nombre: "Carlos",
+      apellido: "Rodríguez",
         cedula: "26123789",
-        edad: 20,
-        altura: 180,
-        posicion: "Mediocampista",
-        trayectoria: "- Escuela de Fútbol Caracas (2018-2020)\n- Club Atlético Municipal (2020-2023)\n- Participación en Torneo Nacional Sub-21 (2022)",
+      edad: 20,
+      altura: 180,
+      posicion: "Mediocampista",
+      trayectoria: "- Escuela de Fútbol Caracas (2018-2020)\n- Club Atlético Municipal (2020-2023)\n- Participación en Torneo Nacional Sub-21 (2022)",
         estado: "pendiente"
       },
       "27456123": {
@@ -141,7 +141,17 @@ const Tables = () => {
         posicion: "Lateral",
         trayectoria: "- Escuela de Fútbol Lara (2018-2020)\n- Club Deportivo Lara (2020-2023)\n- Selección Regional Sub-20 (2022)",
         estado: "pendiente"
-      }
+      },
+      "29500123": {
+        nombre: "Miguel",
+        apellido: "Sánchez",
+        cedula: "29500123",
+        edad: 22,
+        altura: 186,
+        posicion: "Portero",
+        trayectoria: "- Academia de Porteros Elite (2017-2019)\n- Club Deportivo Central (2019-2022)\n- Selección Nacional Sub-23 (2021)",
+      estado: "pendiente"
+    }
     };
     
     console.log('Usando datos iniciales:', JSON.stringify(initialData, null, 2));
@@ -410,9 +420,9 @@ const Tables = () => {
                 <h3 className="mb-0">Solicitudes Pendientes</h3>
               </CardHeader>
               <div className="table-responsive">
-                <Table className="align-items-center table-flush" responsive>
-                  <thead className="thead-light">
-                    <tr>
+              <Table className="align-items-center table-flush" responsive>
+                <thead className="thead-light">
+                  <tr>
                       <th 
                         scope="col"
                         style={{ cursor: 'pointer' }}
@@ -427,19 +437,19 @@ const Tables = () => {
                       >
                         Cédula {getSortIcon('cedula')}
                       </th>
-                      <th scope="col">Posición</th>
-                      <th scope="col">Acciones</th>
-                    </tr>
-                  </thead>
-                  <tbody>
+                    <th scope="col">Posición</th>
+                    <th scope="col">Acciones</th>
+                  </tr>
+                </thead>
+                <tbody>
                     {filteredPlayers.solicitudes.length > 0 ? (
                       filteredPlayers.solicitudes.map(([cedula, player]) => (
-                        <tr 
-                          key={cedula}
-                          style={{ cursor: 'pointer' }} 
-                          className="hover-row"
-                          onClick={() => handlePlayerClick(cedula)}
-                        >
+                    <tr 
+                      key={cedula}
+                      style={{ cursor: 'pointer' }} 
+                      className="hover-row"
+                      onClick={() => handlePlayerClick(cedula)}
+                    >
                           <td className="align-middle">
                             <span className="mb-0 text-sm font-weight-bold">
                               {player.nombre} {player.apellido}
@@ -450,47 +460,47 @@ const Tables = () => {
                           </td>
                           <td className="align-middle">
                             <span className="mb-0 text-sm">{player.posicion}</span>
-                          </td>
+                    </td>
                           <td className="align-middle" onClick={(e) => e.stopPropagation()}>
-                            {player.estado === "pendiente" ? (
+                        {player.estado === "pendiente" ? (
                               <div className="d-flex align-items-center">
-                                <Button
-                                  color="success"
+                            <Button
+                              color="success"
                                   size="sm"
-                                  className="mr-2"
-                                  onClick={(e) => {
-                                    e.preventDefault();
-                                    handleApprove(cedula);
-                                  }}
-                                >
-                                  <i className="fas fa-check" />
-                                </Button>
-                                <Button
-                                  color="danger"
+                              className="mr-2"
+                              onClick={(e) => {
+                                e.preventDefault();
+                                handleApprove(cedula);
+                              }}
+                            >
+                              <i className="fas fa-check" />
+                            </Button>
+                            <Button
+                              color="danger"
                                   size="sm"
-                                  onClick={(e) => {
-                                    e.preventDefault();
-                                    e.stopPropagation();
+                              onClick={(e) => {
+                                e.preventDefault();
+                                e.stopPropagation();
                                     setPlayerToDelete(cedula);
                                     setDeleteModalOpen(true);
-                                  }}
-                                >
-                                  <i className="fas fa-times" />
-                                </Button>
+                              }}
+                            >
+                              <i className="fas fa-times" />
+                            </Button>
                               </div>
-                            ) : player.estado === "descartado" ? (
-                              <Button
-                                color="danger"
+                        ) : player.estado === "descartado" ? (
+                          <Button
+                            color="danger"
                                 size="sm"
-                                disabled
-                              >
-                                No califica
-                              </Button>
-                            ) : (
-                              <Badge color="success">Aprobado</Badge>
-                            )}
-                          </td>
-                        </tr>
+                            disabled
+                          >
+                            No califica
+                          </Button>
+                        ) : (
+                          <Badge color="success">Aprobado</Badge>
+                        )}
+                    </td>
+                  </tr>
                       ))
                     ) : (
                       <tr>
@@ -499,8 +509,8 @@ const Tables = () => {
                         </td>
                       </tr>
                     )}
-                  </tbody>
-                </Table>
+                </tbody>
+              </Table>
               </div>
             </Card>
           </div>
@@ -538,33 +548,33 @@ const Tables = () => {
                 <tbody>
                   {filteredPlayers.preSeleccion.length > 0 ? (
                     filteredPlayers.preSeleccion.map(([cedula, player]) => (
-                      <tr 
-                        key={cedula}
-                        style={{ cursor: 'pointer' }} 
-                        className="hover-row"
-                        onClick={() => handlePlayerClick(cedula)}
-                      >
-                        <td>
-                          <span className="mb-0 text-sm">{player.nombre} {player.apellido}</span>
-                        </td>
-                        <td>{cedula}</td>
-                        <td>{player.posicion}</td>
-                        <td>
-                          <Badge color="success">Aprobado</Badge>
-                        </td>
-                        <td>
-                          <Button
-                            color="warning"
-                            size="lg"
-                            onClick={(e) => {
-                              e.stopPropagation(); // Evitar que el clic en el botón abra la carta
-                              handleReturn(cedula);
-                            }}
-                          >
-                            Volver
-                          </Button>
-                        </td>
-                      </tr>
+                    <tr 
+                      key={cedula}
+                      style={{ cursor: 'pointer' }} 
+                      className="hover-row"
+                      onClick={() => handlePlayerClick(cedula)}
+                    >
+                      <td>
+                        <span className="mb-0 text-sm">{player.nombre} {player.apellido}</span>
+                    </td>
+                      <td>{cedula}</td>
+                      <td>{player.posicion}</td>
+                      <td>
+                        <Badge color="success">Aprobado</Badge>
+                    </td>
+                    <td>
+                        <Button
+                          color="warning"
+                          size="lg"
+                          onClick={(e) => {
+                            e.stopPropagation(); // Evitar que el clic en el botón abra la carta
+                            handleReturn(cedula);
+                          }}
+                        >
+                          Volver
+                        </Button>
+                    </td>
+                  </tr>
                     ))
                   ) : (
                     <tr>
@@ -583,7 +593,7 @@ const Tables = () => {
                 Confirmar Pre-selección
               </Button>
             </Card>
-          </div>
+                      </div>
         </Row>
 
         {/* Modal de Confirmación de Pre-selección */}
@@ -694,7 +704,7 @@ const Tables = () => {
                         <label className="form-control-label">Posición</label>
                         <div className="h4 font-weight-normal border rounded p-3" style={{ borderColor: '#e9ecef', fontSize: '1.1rem', maxWidth: '180px', minWidth: '100px'}}>
                           {selectedPlayer.posicion}
-                        </div>
+                      </div>
                       </FormGroup>
                     </Col>
                     <Col md="6">
@@ -724,10 +734,10 @@ const Tables = () => {
                           <pre className="mb-0" style={{ whiteSpace: 'pre-wrap', fontFamily: 'inherit' }}>
                             {selectedPlayer.trayectoria}
                           </pre>
-                      </div>
+                        </div>
                       </FormGroup>
                     </Col>
-                  </Row>
+        </Row>
                 </CardBody>
               </Card>
             )}

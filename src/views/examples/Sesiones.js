@@ -63,7 +63,8 @@ const Sesiones = () => {
         posesion: { recuperaciones: 0, perdidas: 0 },
           centros: { completados: null, intentados: null, precision: null },
         intercepciones: 0,
-        bloqueos: 0
+        bloqueos: 0,
+        duelosAereos: { ganados: 0, total: 0, porcentaje: 0 }
       }))
     }
     ];
@@ -73,6 +74,9 @@ const Sesiones = () => {
   const [nuevoTipoSesion, setNuevoTipoSesion] = useState("ofensiva");
   const [nuevaFecha, setNuevaFecha] = useState(""); // Estado para la nueva fecha
   const [errorModal, setErrorModal] = useState("");
+  const [modalNuevaSesionOpen, setModalNuevaSesionOpen] = useState(false);
+  const [nuevoNombreSesion, setNuevoNombreSesion] = useState("");
+  const [nuevaFechaSesion, setNuevaFechaSesion] = useState("");
 
   // Guardar sesiones en LocalStorage cada vez que cambien
   useEffect(() => {
@@ -84,6 +88,8 @@ const Sesiones = () => {
     Defensa: [
       { key: 'goles', label: 'Goles' },
       { key: 'asistencias', label: 'Asistencias' },
+      { key: 'efectividadPases', label: 'Efectividad de Pases' },
+      { key: 'efectividadTiros', label: 'Efectividad de Tiros' },
       { key: 'recuperaciones', label: 'Recuperaciones' },
       { key: 'intercepciones', label: 'Intercepciones' },
       { key: 'bloqueos', label: 'Bloqueos' },
@@ -93,12 +99,14 @@ const Sesiones = () => {
       { key: 'goles', label: 'Goles' },
       { key: 'asistencias', label: 'Asistencias' },
       { key: 'efectividadPases', label: 'Efectividad de Pases' },
+      { key: 'efectividadTiros', label: 'Efectividad de Tiros' },
       { key: 'recuperaciones', label: 'Recuperaciones' },
       { key: 'duelosGanados', label: 'Duelos Ganados' }
     ],
     Delantero: [
       { key: 'goles', label: 'Goles' },
       { key: 'asistencias', label: 'Asistencias' },
+      { key: 'efectividadPases', label: 'Efectividad de Pases' },
       { key: 'efectividadTiros', label: 'Efectividad de Tiros' }
     ],
     Portero: [
@@ -230,6 +238,19 @@ const Sesiones = () => {
       }
       if (ganados > totales) {
         setErrorModal('Los duelos mano a mano ganados no pueden ser mayores que los duelos mano a mano totales');
+        return;
+      }
+    }
+    // Validación especial para duelos aéreos
+    if (selectedStat === 'duelosAereos') {
+      const ganados = Number(selectedPlayer.duelosAereos?.ganados ?? 0);
+      const totales = Number(selectedPlayer.duelosAereos?.total ?? 0);
+      if (ganados < 0 || totales < 0) {
+        setErrorModal('No se permiten valores negativos en los duelos aéreos.');
+        return;
+      }
+      if (ganados > totales) {
+        setErrorModal('Los duelos aéreos ganados no pueden ser mayores que los duelos aéreos totales');
         return;
       }
     }
@@ -420,29 +441,39 @@ const Sesiones = () => {
 
   // Función para agregar una nueva sesión
   const agregarNuevaSesion = () => {
+    setModalNuevaSesionOpen(true);
+  };
+
+  const confirmarAgregarSesion = () => {
+    if (!nuevoNombreSesion.trim() || !nuevaFechaSesion) {
+      alert('Por favor, completa el nombre y la fecha de la sesión.');
+      return;
+    }
     const nuevaSesion = {
-      id: sesiones.length + 1, // Asigna un nuevo ID
-      titulo: `Sesión ${sesiones.length + 1}`, // Título por defecto
+      id: sesiones.length + 1,
+      titulo: nuevoNombreSesion,
+      fecha: nuevaFechaSesion,
       tipo: "ofensiva",
       jugadores: Object.keys(jugadoresReclutados).map(cedula => ({
         cedula,
         nombre: jugadoresReclutados[cedula].nombre,
         apellido: jugadoresReclutados[cedula].apellido,
-        // Estadísticas básicas
         goles: 0,
         asistencias: 0,
-        // Estadísticas avanzadas
         pases: { completados: 0, intentados: 0, efectividad: 0 },
         tiros: { alArco: 0, total: 0, precision: 0, xG: 0 },
         duelos: { ganados: 0, total: 0, porcentaje: 0 },
         posesion: { recuperaciones: 0, perdidas: 0 },
         centros: { completados: 0, intentados: 0, precision: 0 },
         intercepciones: 0,
-        bloqueos: 0
+        bloqueos: 0,
+        duelosAereos: { ganados: 0, total: 0, porcentaje: 0 }
       }))
     };
-
     setSesiones(prevSesiones => [...prevSesiones, nuevaSesion]);
+    setModalNuevaSesionOpen(false);
+    setNuevoNombreSesion("");
+    setNuevaFechaSesion("");
   };
 
   // Construir lista de todas las estadísticas únicas de todas las posiciones
@@ -527,11 +558,17 @@ const Sesiones = () => {
           </td>
         );
       case 'duelosAereos':
-        // Usamos duelos.ganados como aproximación
         return (
           <td key="duelosAereos">
-            <div style={{ cursor: 'pointer' }} onClick={() => handleStatClick(sesion.id, jugador, 'duelos')}>
-              {jugador.duelos?.ganados ?? '-'}
+            <div style={{ cursor: 'pointer' }} onClick={() => handleStatClick(sesion.id, jugador, 'duelosAereos')}>
+              <Progress
+                value={jugador.duelosAereos?.total > 0 ? Math.round((jugador.duelosAereos?.ganados / jugador.duelosAereos?.total) * 100) : 0}
+                color={jugador.duelosAereos?.total > 0 && (jugador.duelosAereos?.ganados / jugador.duelosAereos?.total) > 0.6 ? 'success' : 'warning'}
+                style={{ height: '23px' }}
+              >
+                {jugador.duelosAereos?.total > 0 ? Math.round((jugador.duelosAereos?.ganados / jugador.duelosAereos?.total) * 100) : 0}%
+              </Progress>
+              <small>{jugador.duelosAereos?.ganados ?? '-'} / {jugador.duelosAereos?.total ?? '-'}</small>
             </div>
           </td>
         );
@@ -646,10 +683,28 @@ const Sesiones = () => {
           </td>
         );
       }
+      case 'duelosAereos':
+        return (
+          <td key="duelosAereos">
+            <div style={{ cursor: 'pointer' }} onClick={() => handleStatClick(sesion.id, jugador, 'duelosAereos')}>
+              <Progress
+                value={jugador.duelosAereos?.total > 0 ? Math.round((jugador.duelosAereos?.ganados / jugador.duelosAereos?.total) * 100) : 0}
+                color={jugador.duelosAereos?.total > 0 && (jugador.duelosAereos?.ganados / jugador.duelosAereos?.total) > 0.6 ? 'success' : 'warning'}
+                style={{ height: '23px' }}
+              >
+                {jugador.duelosAereos?.total > 0 ? Math.round((jugador.duelosAereos?.ganados / jugador.duelosAereos?.total) * 100) : 0}%
+              </Progress>
+              <small>{jugador.duelosAereos?.ganados ?? '-'} / {jugador.duelosAereos?.total ?? '-'}</small>
+            </div>
+          </td>
+        );
       default:
         return <td key={est.key}>-</td>;
     }
   };
+
+  // Obtener la fecha de hoy en formato YYYY-MM-DD
+  const hoy = new Date().toISOString().split('T')[0];
 
   return (
     <>
@@ -728,8 +783,13 @@ const Sesiones = () => {
                   <thead className="thead-light">
                     <tr>
                       <th scope="col">Jugador</th>
-                      {allStats.map(est => (
-                        <th key={est.key} scope="col">{est.label}</th>
+                      <th scope="col">Posición</th>
+                      {allStats.filter(est => est.key !== 'bloqueos').map(est => (
+                        est.key === 'recuperaciones'
+                          ? <th key={est.key}>Recuperaciones/Pérdidas</th>
+                          : est.key === 'intercepciones'
+                            ? <th key={est.key}>Intercepciones/Bloqueos</th>
+                            : <th key={est.key}>{est.label}</th>
                       ))}
                     </tr>
                   </thead>
@@ -737,7 +797,150 @@ const Sesiones = () => {
                     {sesion.jugadores.map(jugador => (
                       <tr key={jugador.cedula}>
                         <td>{`${jugador.nombre} ${jugador.apellido}`}</td>
-                        {allStats.map(est => getStatCell(sesion, { ...jugador, posicion: getPosicionJugador(jugador) }, est, handleStatClick))}
+                        <td>{getPosicionJugador(jugador)}</td>
+                        {allStats.filter(est => est.key !== 'bloqueos').map(est => {
+                          // Determinar la posición del jugador
+                          const posicion = getPosicionJugador(jugador)?.toLowerCase() || '';
+                          const esPortero = posicion.includes('portero');
+                          const esCampo = posicion.includes('defensa') || posicion.includes('lateral') || posicion.includes('mediocampista') || posicion.includes('delantero');
+
+                          // Columnas exclusivas de portero
+                          const columnasPortero = ['porcentajeParadas', 'golesConcedidos', 'pasesExitososPortero', 'duelosManoAManoGanados'];
+                          // Columnas exclusivas de campo
+                          const columnasCampo = ['goles', 'asistencias', 'efectividadPases', 'efectividadTiros', 'recuperaciones', 'intercepciones', 'duelosAereos', 'duelosGanados'];
+
+                          // Si es jugador de campo y la columna es exclusiva de portero
+                          if (esCampo && columnasPortero.includes(est.key)) {
+                            return <td key={est.key}>-</td>;
+                          }
+                          // Si es portero y la columna es exclusiva de campo
+                          if (esPortero && columnasCampo.includes(est.key)) {
+                            return <td key={est.key}>-</td>;
+                          }
+
+                          // Renderizado especial para recuperaciones/perdidas
+                          if (est.key === 'recuperaciones') {
+                            if (esPortero) return <td key="recuperaciones/perdidas">-</td>;
+                            return (
+                              <td key="recuperaciones/perdidas">
+                                <Badge
+                                  color="primary"
+                                  style={{ cursor: 'pointer', fontSize: '1rem' }}
+                                  onClick={() => handleStatClick(sesion.id, jugador, 'posesion')}
+                                >
+                                  {jugador.posesion?.recuperaciones ?? '-'} / {jugador.posesion?.perdidas ?? '-'}
+                                </Badge>
+                              </td>
+                            );
+                          }
+                          // Renderizado especial para intercepciones/bloqueos
+                          if (est.key === 'intercepciones') {
+                            if (esPortero) return <td key="intercepciones/bloqueos">-</td>;
+                            return (
+                              <td key="intercepciones/bloqueos">
+                                <Badge
+                                  color="danger"
+                                  style={{ cursor: 'pointer', fontSize: '1rem' }}
+                                  onClick={() => handleStatClick(sesion.id, jugador, 'defensa')}
+                                >
+                                  {jugador.intercepciones ?? '-'} / {jugador.bloqueos ?? '-'}
+                                </Badge>
+                              </td>
+                            );
+                          }
+                          // Renderizado especial para duelos aéreos
+                          if (est.key === 'duelosAereos') {
+                            if (esPortero) return <td key="duelosAereos">-</td>;
+                            return (
+                              <td key="duelosAereos">
+                                <div style={{ cursor: 'pointer' }} onClick={() => handleStatClick(sesion.id, jugador, 'duelosAereos')}>
+                                  <Progress
+                                    value={jugador.duelosAereos?.total > 0 ? Math.round((jugador.duelosAereos?.ganados / jugador.duelosAereos?.total) * 100) : 0}
+                                    color={jugador.duelosAereos?.total > 0 && (jugador.duelosAereos?.ganados / jugador.duelosAereos?.total) > 0.6 ? 'success' : 'warning'}
+                                    style={{ height: '23px' }}
+                                  >
+                                    {jugador.duelosAereos?.total > 0 ? Math.round((jugador.duelosAereos?.ganados / jugador.duelosAereos?.total) * 100) : 0}%
+                                  </Progress>
+                                  <small>{jugador.duelosAereos?.ganados ?? '-'} / {jugador.duelosAereos?.total ?? '-'}</small>
+                                </div>
+                              </td>
+                            );
+                          }
+                          // Renderizado especial para duelos mano a mano ganados
+                          if (est.key === 'duelosManoAManoGanados') {
+                            if (esCampo) return <td key="duelosManoAManoGanados">-</td>;
+                            // Portero: sí editable
+                            const ganados = Number(jugador.duelosManoAManoGanados ?? 0);
+                            const totales = Number(jugador.duelosManoAManoTotales ?? 0);
+                            const porcentaje = totales > 0 ? Math.round((ganados / totales) * 100) : 0;
+                            return (
+                              <td key="duelosManoAManoGanados">
+                                <div style={{ cursor: 'pointer' }} onClick={() => handleStatClick(sesion.id, jugador, 'duelosManoAManoGanados')}>
+                                  <Progress
+                                    value={porcentaje}
+                                    color={porcentaje > 80 ? 'success' : porcentaje > 60 ? 'info' : 'warning'}
+                                    style={{ height: '23px' }}
+                                  >
+                                    {porcentaje}%
+                                  </Progress>
+                                  <small>{ganados} / {totales}</small>
+                                </div>
+                              </td>
+                            );
+                          }
+                          // Renderizado especial para porcentaje de paradas
+                          if (est.key === 'porcentajeParadas') {
+                            if (esCampo) return <td key="porcentajeParadas">-</td>;
+                            // Portero: sí editable
+                            const paradas = jugador.paradasRealizadas ?? 0;
+                            const tiros = jugador.tirosAPorteria ?? 0;
+                            const porcentaje = tiros > 0 ? Math.round((paradas / tiros) * 100) : 0;
+                            return (
+                              <td key="porcentajeParadas">
+                                <div style={{ cursor: 'pointer' }} onClick={() => handleStatClick(sesion.id, jugador, 'porcentajeParadas')}>
+                                  <Progress
+                                    value={porcentaje}
+                                    color={porcentaje > 80 ? 'success' : porcentaje > 60 ? 'info' : 'warning'}
+                                    style={{ height: '23px' }}
+                                  >
+                                    {porcentaje}%
+                                  </Progress>
+                                  <small>{paradas} / {tiros}</small>
+                                </div>
+                              </td>
+                            );
+                          }
+                          // Renderizado especial para goles concedidos
+                          if (est.key === 'golesConcedidos') {
+                            if (esCampo) return <td key="golesConcedidos">-</td>;
+                            // Portero: sí editable (aunque es cálculo automático)
+                            const paradas = jugador.paradasRealizadas ?? 0;
+                            const tiros = jugador.tirosAPorteria ?? 0;
+                            const golesConcedidos = Math.max(0, tiros - paradas);
+                            return (
+                              <td key="golesConcedidos">
+                                {golesConcedidos}
+                              </td>
+                            );
+                          }
+                          // Renderizado especial para pases exitosos portero
+                          if (est.key === 'pasesExitososPortero') {
+                            if (esCampo) return <td key="pasesExitososPortero">-</td>;
+                            return (
+                              <td key="pasesExitososPortero">
+                                <Badge 
+                                  color="info" 
+                                  style={{ cursor: 'pointer', fontSize: '1rem', backgroundColor: '#17a2b8', color: 'white', padding: '8px 16px', borderRadius: '12px' }}
+                                  onClick={() => handleStatClick(sesion.id, jugador, 'pasesExitososPortero')}
+                                >
+                                  {jugador.pasesExitososPortero ?? '-'}
+                                </Badge>
+                              </td>
+                            );
+                          }
+                          // Para el resto de columnas, usa getStatCell solo si corresponde
+                          return getStatCell(sesion, { ...jugador, posicion: getPosicionJugador(jugador) }, est, handleStatClick);
+                        })}
                       </tr>
                     ))}
                   </tbody>
@@ -753,6 +956,38 @@ const Sesiones = () => {
             <Button color="primary" onClick={agregarNuevaSesion}>
               Agregar Nueva Sesión
             </Button>
+            <Modal isOpen={modalNuevaSesionOpen} toggle={() => setModalNuevaSesionOpen(false)} className="modal-dialog-centered">
+              <ModalHeader toggle={() => setModalNuevaSesionOpen(false)}>
+                Nueva Sesión
+              </ModalHeader>
+              <ModalBody>
+                <FormGroup>
+                  <Label>Nombre de la sesión</Label>
+                  <Input
+                    type="text"
+                    value={nuevoNombreSesion}
+                    onChange={e => setNuevoNombreSesion(e.target.value)}
+                  />
+                </FormGroup>
+                <FormGroup>
+                  <Label>Fecha de la Sesión</Label>
+                  <Input
+                    type="date"
+                    value={nuevaFechaSesion}
+                    onChange={e => setNuevaFechaSesion(e.target.value)}
+                    min={hoy}
+                  />
+                </FormGroup>
+              </ModalBody>
+              <ModalFooter>
+                <Button color="primary" onClick={confirmarAgregarSesion}>
+                  Guardar
+                </Button>
+                <Button color="secondary" onClick={() => setModalNuevaSesionOpen(false)}>
+                  Cancelar
+                </Button>
+              </ModalFooter>
+            </Modal>
           </Col>
         </Row>
 
@@ -1042,6 +1277,48 @@ const Sesiones = () => {
                     <Col md="12">
                       <div className="text-center mt-3">
                         <h4>Porcentaje: {selectedPlayer.duelosManoAManoTotales > 0 ? Math.round((selectedPlayer.duelosManoAManoGanados / selectedPlayer.duelosManoAManoTotales) * 100) : 0}%</h4>
+                      </div>
+                    </Col>
+                  </>
+                )}
+                {/* Modal para Duelos Aéreos */}
+                {selectedStat === 'duelosAereos' && (
+                  <>
+                    <Col md="6">
+                      <FormGroup>
+                        <Label>Duelos Aéreos Ganados</Label>
+                        <Input
+                          type="number"
+                          value={selectedPlayer.duelosAereos?.ganados ?? ''}
+                          onChange={(e) => setSelectedPlayer(prev => ({
+                            ...prev,
+                            duelosAereos: {
+                              ...prev.duelosAereos,
+                              ganados: e.target.value === '' ? null : parseInt(e.target.value)
+                            }
+                          }))}
+                        />
+                      </FormGroup>
+                    </Col>
+                    <Col md="6">
+                      <FormGroup>
+                        <Label>Duelos Aéreos Totales</Label>
+                        <Input
+                          type="number"
+                          value={selectedPlayer.duelosAereos?.total ?? ''}
+                          onChange={(e) => setSelectedPlayer(prev => ({
+                            ...prev,
+                            duelosAereos: {
+                              ...prev.duelosAereos,
+                              total: e.target.value === '' ? null : parseInt(e.target.value)
+                            }
+                          }))}
+                        />
+                      </FormGroup>
+                    </Col>
+                    <Col md="12">
+                      <div className="text-center mt-3">
+                        <h4>Porcentaje: {selectedPlayer.duelosAereos?.total > 0 ? Math.round((selectedPlayer.duelosAereos.ganados / selectedPlayer.duelosAereos.total) * 100) : 0}%</h4>
                       </div>
                     </Col>
                   </>

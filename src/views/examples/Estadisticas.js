@@ -109,7 +109,6 @@ const Estadisticas = () => {
             <thead className="thead-light">
               <tr>
                 <th>Nombre</th>
-                <th>Posición</th>
                 <th>Sesiones</th>
                 <th>Paradas (T/P)</th>
                 <th>Tiros a Portería (T/P)</th>
@@ -125,7 +124,6 @@ const Estadisticas = () => {
               {porteros.length > 0 ? porteros.map(j => (
                 <tr key={j.cedula}>
                   <td>{j.nombre} {j.apellido}</td>
-                  <td>{j.posicion}</td>
                   <td>{j.sesiones}</td>
                   <td>{j.paradasRealizadas} / {j.promedioParadas}</td>
                   <td>{j.tirosAPorteria} / {j.promedioTirosAPorteria}</td>
