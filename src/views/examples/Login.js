@@ -66,7 +66,13 @@ const Login = () => {
       return;
     }
 
-    navigate("/admin/");
+    // Verificar credenciales
+    if ((email === "edgarcastillo@gmail.com" && password === "12345678") || 
+        (email === "neilrangel@gmail.com" && password === "87654321")) {
+      navigate("/admin/");
+    } else {
+      setError("Credenciales incorrectas.");
+    }
   };
 
   return (
