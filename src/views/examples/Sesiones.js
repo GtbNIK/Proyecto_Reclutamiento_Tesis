@@ -752,7 +752,7 @@ const Sesiones = () => {
                     <Col className="text-right">
                       {editandoTitulo === sesion.id ? (
                         <Button
-                          color="success"
+                          color="#01920D"
                           size="sm"
                           onClick={() => guardarTitulo(sesion.id)}
                           className="mr-2"
@@ -953,7 +953,10 @@ const Sesiones = () => {
         {/* Botón para agregar nueva sesión */}
         <Row>
           <Col className="text-center">
-            <Button color="primary" onClick={agregarNuevaSesion}>
+            <Button 
+              style={{ backgroundColor: 'white', color: '#01920D', borderColor: '#01920D', borderWidth: 2 }} 
+              onClick={agregarNuevaSesion}
+            >
               Agregar Nueva Sesión
             </Button>
             <Modal isOpen={modalNuevaSesionOpen} toggle={() => setModalNuevaSesionOpen(false)} className="modal-dialog-centered">
@@ -980,8 +983,11 @@ const Sesiones = () => {
                 </FormGroup>
               </ModalBody>
               <ModalFooter>
-                <Button color="primary" onClick={confirmarAgregarSesion}>
-                  Guardar
+                <Button 
+                  style={{ backgroundColor: '#01920D', color: 'white', borderColor: '#01920D' }} 
+                  onClick={confirmarAgregarSesion}
+                >
+                  Confirmar
                 </Button>
                 <Button color="secondary" onClick={() => setModalNuevaSesionOpen(false)}>
                   Cancelar

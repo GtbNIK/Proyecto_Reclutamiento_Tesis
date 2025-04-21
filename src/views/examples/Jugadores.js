@@ -162,28 +162,33 @@ const Jugadores = () => {
       </div>
       
       <Container className="mt--9" fluid>
-        {/* Buscador */}
-        <Row className="mb-4">
-          <Col>
+       {/* Buscador */}
+       <Row className="mb-4">
+          <div className="col">
             <Card className="shadow">
               <CardBody>
-                <FormGroup>
-                  <InputGroup>
-                    <InputGroupAddon addonType="prepend">
-                      <InputGroupText>
-                        <i className="fas fa-search" />
-                      </InputGroupText>
-                    </InputGroupAddon>
-                    <Input
-                      placeholder="Buscar por nombre o cédula..."
-                      value={searchTerm}
-                      onChange={(e) => setSearchTerm(e.target.value)}
-                    />
-                  </InputGroup>
-                </FormGroup>
+        <Row>
+                  <Col lg="12">
+                    <FormGroup className="mb-0">
+                      <InputGroup className="input-group-alternative">
+                        <InputGroupAddon addonType="prepend">
+                          <InputGroupText>
+                            <i className="fas fa-search" />
+                          </InputGroupText>
+                        </InputGroupAddon>
+                        <Input 
+                          placeholder="Buscar por nombre o cédula..." 
+                          type="text"
+                          value={searchTerm}
+                          onChange={(e) => setSearchTerm(e.target.value)}
+                        />
+                      </InputGroup>
+                    </FormGroup>
+                  </Col>
+                </Row>
               </CardBody>
             </Card>
-          </Col>
+          </div>
         </Row>
 
         {/* Tabla de Jugadores */}
@@ -377,7 +382,7 @@ const Jugadores = () => {
                       <FormGroup>
                         <label className="form-control-label">Especialización</label>
                         <div className="h4 font-weight-normal border rounded p-3" style={{ borderColor: '#e9ecef', fontSize: '1.1rem', minWidth: '100px' }}>
-                          {selectedPlayer.piernaHabil}
+                          {selectedPlayer.especializacion}
                         </div>
                       </FormGroup>
                     </Col>

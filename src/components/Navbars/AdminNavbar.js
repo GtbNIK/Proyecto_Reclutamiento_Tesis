@@ -46,7 +46,7 @@ const AdminNavbar = (props) => {
             className="h4 mb-0 text-white d-none d-lg-inline-block"
             to="/admin/principal"
           >
-            Principaaal
+            Principal
           </Link>
           <Nav className="align-items-center" navbar>
             <Button

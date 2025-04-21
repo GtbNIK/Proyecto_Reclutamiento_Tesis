@@ -301,7 +301,7 @@ const Tables = () => {
             <Card className="shadow">
               <CardBody>
         <Row>
-                  <Col lg="11">
+                  <Col lg="12">
                     <FormGroup className="mb-0">
                       <InputGroup className="input-group-alternative">
                         <InputGroupAddon addonType="prepend">
@@ -317,14 +317,6 @@ const Tables = () => {
                         />
                       </InputGroup>
                     </FormGroup>
-                  </Col>
-                  <Col lg="1">
-                    <Button
-                      color="primary"
-                      onClick={(e) => e.preventDefault()}
-                    >
-                      <i className="fas fa-search" />
-                    </Button>
                   </Col>
                 </Row>
               </CardBody>
@@ -508,7 +500,7 @@ const Tables = () => {
               <Button
                 color="primary"
                 onClick={() => setConfirmModalOpen(true)}
-                style={{ backgroundColor: '#02B911', borderColor: '#02B911' }} // Verde personalizado
+                style={{ backgroundColor: '#01920D', borderColor: '#01920D' }} // Verde personalizado
               >
                 Confirmar Pre-selección
               </Button>
@@ -532,7 +524,7 @@ const Tables = () => {
           <Button 
             color="primary"
             onClick={handleConfirmPreSelection}
-            style={{ backgroundColor: '#02B911', borderColor: '#02B911' }} // Verde personalizado
+            style={{ backgroundColor: '#01920D', borderColor: '#01920D' }} // Verde personalizado
           >
             Confirmar
           </Button>
@@ -631,7 +623,7 @@ const Tables = () => {
                       <FormGroup>
                         <label className="form-control-label">Especialización</label>
                         <div className="h4 font-weight-normal border rounded p-3" style={{ borderColor: '#e9ecef', fontSize: '1.1rem', minWidth: '100px' }}>
-                          {selectedPlayer.piernaHabil}
+                          {selectedPlayer.especializacion}
                         </div>
                       </FormGroup>
                     </Col>

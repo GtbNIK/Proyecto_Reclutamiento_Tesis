@@ -382,9 +382,9 @@ const Index = (props) => {
                   </div>
                   <div className="col text-right">
                     <Button
-                      color="success"
                       onClick={() => navigate("/admin/jugadores")}
                       size="sm"
+                      style={{ backgroundColor: '#01920D', borderColor: '#01920D', color: 'white' }}
                     >
                       Ver Todo
                     </Button>
@@ -408,9 +408,9 @@ const Index = (props) => {
                       <td>{player.posicion}</td>
                       <td>
                         <Button 
-                          color="success"
                           size="lg" 
                           onClick={() => navigate("/admin/jugadores")}
+                          style={{ backgroundColor: '#01920D', borderColor: '#01920D', color: 'white' }}
                         >
                           Ver Más
                         </Button>
