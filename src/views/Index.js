@@ -56,6 +56,7 @@ import {
 
 import Header from "components/Headers/Header.js";
 import { useJugadores } from '../context/JugadoresContext';
+import { consolidarEstadisticasPorJugador } from '../utils/estadisticas';
 
 const Index = (props) => {
   const [activeNav, setActiveNav] = useState(1);
@@ -201,6 +202,62 @@ const Index = (props) => {
 
   const solicitudesPendientes = contarSolicitudesPendientes();
 
+  // --- Lógica para la gráfica de evolución (preview) ---
+  const sesiones = JSON.parse(localStorage.getItem('sesionesEntrenamiento')) || [];
+  const { jugadoresCampo } = consolidarEstadisticasPorJugador(sesiones, jugadoresReclutados);
+  const jugadoresCampoList = Object.values(jugadoresReclutados).filter(j => j.posicion && !j.posicion.toLowerCase().includes('portero'));
+  const jugadorPreview = jugadoresCampoList[0]?.cedula || '';
+  const metricas = [
+    { key: 'goles', label: 'Goles' },
+    { key: 'asistencias', label: 'Asistencias' },
+    { key: 'bloqueos', label: 'Bloqueos' },
+    { key: 'intercepciones', label: 'Intercepciones' },
+    { key: 'recuperaciones', label: 'Recuperaciones' },
+    { key: 'perdidas', label: 'Pérdidas' },
+  ];
+  const datosPorSesion = sesiones.map((sesion, idx) => {
+    const jugador = sesion.jugadores.find(j => j.cedula === jugadorPreview);
+    return {
+      sesion: idx + 1,
+      goles: jugador?.goles ?? 0,
+      asistencias: jugador?.asistencias ?? 0,
+      bloqueos: jugador?.bloqueos ?? 0,
+      intercepciones: jugador?.intercepciones ?? 0,
+      recuperaciones: jugador?.posesion?.recuperaciones ?? 0,
+      perdidas: jugador?.posesion?.perdidas ?? 0,
+    };
+  });
+  const dataLinePreview = {
+    labels: datosPorSesion.map(d => `Sesión ${d.sesion}`),
+    datasets: metricas.map((metrica, i) => ({
+      label: metrica.label,
+      data: datosPorSesion.map(d => d[metrica.key]),
+      borderColor: [
+        '#01920D', // Goles
+        '#2dce89', // Asistencias
+        '#f5365c', // Bloqueos
+        '#5e72e4', // Intercepciones
+        '#fb6340', // Recuperaciones
+        '#11cdef', // Pérdidas
+      ][i],
+      backgroundColor: 'rgba(0,0,0,0)',
+      borderWidth: 3,
+      pointRadius: 4,
+      fill: false,
+      tension: 0.2,
+    }))
+  };
+  const optionsLinePreview = {
+    responsive: true,
+    plugins: {
+      legend: { display: true, position: 'top' },
+      title: { display: true, text: 'Evolución de un Jugador (Vista Previa)' },
+    },
+    scales: {
+      y: { beginAtZero: true }
+    }
+  };
+
   return (
     <>
       <Header proximaSesion={proximaSesion} solicitudesPendientes={solicitudesPendientes} />
@@ -264,6 +321,7 @@ const Index = (props) => {
         <Modal isOpen={modalNuevaSesion} toggle={toggleModalNuevaSesion}>
           <ModalHeader toggle={toggleModalNuevaSesion}>
             Agregar Nueva Sesión
+            <div style={{ height: '3px', width: '100%', background: '#01920D', borderRadius: '2px', margin: '7px 0px 7px 0px' }} />
           </ModalHeader>
           <ModalBody>
             <FormGroup>
@@ -295,6 +353,9 @@ const Index = (props) => {
                 onChange={handleNuevaSesionChange}
               />
             </FormGroup>
+            <div style={{ width: '100%', display: 'flex', justifyContent: 'center', margin: '10px 0' }}>
+                <img src={require('../assets/img/brand/logo.png')} alt="Logo" style={{ height: '50px' , marginRight:'20px'}} />
+              </div>
           </ModalBody>
           <ModalFooter>
             <Button 
@@ -331,6 +392,7 @@ const Index = (props) => {
         <Modal isOpen={modal} toggle={toggleModal}>
           <ModalHeader toggle={toggleModal}>
             Editar Sesión
+            <div style={{ height: '3px', width: '100%', background: '#01920D', borderRadius: '2px', margin: '7px 0px 7px 0px' }} />
           </ModalHeader>
           <ModalBody>
             <FormGroup>
@@ -349,6 +411,7 @@ const Index = (props) => {
                 onChange={(e) => setFechaSesion(e.target.value)}
                 min={obtenerFechaMinima()}
               />
+
             </FormGroup>
             <FormGroup>
               <Label>Hora de la Sesión</Label>
@@ -358,6 +421,9 @@ const Index = (props) => {
                 onChange={(e) => setHoraSesion(e.target.value)}
               />
             </FormGroup>
+            <div style={{ width: '100%', display: 'flex', justifyContent: 'center', margin: '10px 0' }}>
+                <img src={require('../assets/img/brand/logo.png')} alt="Logo" style={{ height: '50px' , marginRight: '20px'}} />
+              </div>
           </ModalBody>
           <ModalFooter>
             <Button 
@@ -373,14 +439,14 @@ const Index = (props) => {
         </Modal>
 
         <Row className="mt-5">
-          <Col className="mb-5 mb-xl-0" xl="8">
+          <Col className="mb-5 mb-xl-0" xl="6">
             <Card className="shadow">
               <CardHeader className="border-0">
                 <Row className="align-items-center">
-                  <div className="col">
+                  <Col>
                     <h3 className="mb-0">Vista Previa de Jugadores Reclutados</h3>
-                  </div>
-                  <div className="col text-right">
+                  </Col>
+                  <Col className="text-right">
                     <Button
                       onClick={() => navigate("/admin/jugadores")}
                       size="sm"
@@ -388,7 +454,7 @@ const Index = (props) => {
                     >
                       Ver Todo
                     </Button>
-                  </div>
+                  </Col>
                 </Row>
               </CardHeader>
               <Table className="align-items-center table-flush" responsive style={{ marginBottom: '50px' }}>
@@ -419,6 +485,43 @@ const Index = (props) => {
                   ))}
                 </tbody>
               </Table>
+            </Card>
+          </Col>
+          <Col className="mb-5 mb-xl-0" xl="6">
+            <Card className="shadow">
+              <CardHeader className="border-0">
+                <Row className="align-items-center">
+                  <Col>
+                    <h3 className="mb-0">Evolución de un Jugador (Vista Previa)</h3>
+                    {jugadorPreview && jugadoresCampoList.length > 0 && (
+                      <h5 className="text-muted mt-1 mb-0" style={{ fontWeight: 400 }}>
+                        Jugador: {jugadoresCampoList[0].nombre} {jugadoresCampoList[0].apellido}
+                      </h5>  
+                    )}
+                    <div style={{ height: '3px', width: '100%', background: '#01920D', borderRadius: '2px', margin: '7px 0px 7px 0px' }} />
+                  </Col>
+                  <Col className="text-right">
+                    <Button
+                      size="sm"
+                      style={{ backgroundColor: '#01920D', borderColor: '#01920D', color: 'white' }}
+                      onClick={() => navigate('/admin/estadisticas')}
+                    >
+                      Ver más
+                    </Button>
+                  </Col>
+                </Row>
+              </CardHeader>
+              <CardBody>
+                <div style={{ minHeight: 320 }}>
+                  {jugadorPreview && jugadoresCampoList.length > 0 ? (
+                    <Line data={dataLinePreview} options={optionsLinePreview} />
+                  ) : (
+                    <div className="text-center text-muted py-5">
+                      <h4>Aún no hay jugadores en el área de estadísticas.<br/>Agrega uno primero y se mostrará su gráfica aquí.</h4>
+                    </div>
+                  )}
+                </div>
+              </CardBody>
             </Card>
           </Col>
         </Row>

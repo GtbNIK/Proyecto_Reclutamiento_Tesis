@@ -320,6 +320,7 @@ const Jugadores = () => {
         >
           <ModalHeader toggle={() => setModalOpen(false)}>
             Información del Jugador
+            <div style={{ height: '3px', width: '100%', background: '#01920D', borderRadius: '2px', margin: '7px 0px 7px 0px' }} />
           </ModalHeader>
           <ModalBody>
             {selectedPlayer && (
@@ -414,9 +415,12 @@ const Jugadores = () => {
             )}
           </ModalBody>
           <ModalFooter>
-            <Button color="secondary" onClick={() => setModalOpen(false)}>
-              Cerrar
-            </Button>
+            <div style={{ width: '100%', display: 'flex', flexDirection: 'column', alignItems: 'center' }}>
+              <img src={require('../../assets/img/brand/logo.png')} alt="Logo" style={{ height: '50px', marginBottom: '25px' , marginTop: '-15px'}} />
+              <Button color="secondary" onClick={() => setModalOpen(false)}>
+                Cerrar
+              </Button>
+            </div>
           </ModalFooter>
         </Modal>
       </Container>

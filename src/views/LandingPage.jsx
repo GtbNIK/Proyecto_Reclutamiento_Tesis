@@ -28,7 +28,7 @@ const LandingPage = () => {
           <img src={require("assets/img/brand/logo.png")} alt="Logo" />
         </div>
         <Link to="/auth/login">
-          <Button color="primary" className="login-button">
+          <Button style={{ backgroundColor: '#01920D', borderColor: '#01920D', color: 'white' }} className="login-button">
             Iniciar Sesión
           </Button>
         </Link>
@@ -54,8 +54,8 @@ const LandingPage = () => {
               ¡Envía tu formulario y demuéstranos de qué estás hecho!
             </p>
             <Button 
-              color="success" 
-              size="lg" 
+              style={{ backgroundColor: '#01920D', borderColor: '#01920D', color: 'white' }}
+              size="lg"
               className="cta-button"
               onClick={toggleFormModal}
             >

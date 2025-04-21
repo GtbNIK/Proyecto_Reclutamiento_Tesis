@@ -69,7 +69,7 @@ const Auth = (props) => {
                 <Col lg="5" md="6">
                   <h1 className="text-white">Bienvenido!</h1>
                   <p className="text-lead text-light">
-                    Inicia Sesión para obtener acceso al Dashboard de Gestión.
+                    Inicia Sesión para obtener acceso al Sistema de Gestión.
                   </p>
                 </Col>
               </Row>

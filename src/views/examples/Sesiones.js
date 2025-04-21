@@ -741,6 +741,7 @@ const Sesiones = () => {
                             type="date"
                             value={nuevaFecha || sesion.fecha}
                             onChange={(e) => setNuevaFecha(e.target.value)}
+                            min={hoy}
                           />
                         </>
                       ) : (
@@ -755,18 +756,19 @@ const Sesiones = () => {
                           color="#01920D"
                           size="sm"
                           onClick={() => guardarTitulo(sesion.id)}
-                          className="mr-2"
+                          className="mr-2 border-4 border-success"
                         >
                           Confirmar Cambios
                         </Button>
                       ) : (
                         <Button
-                          color="success"
+                          color="white"
                           size="sm"
+                          style={{ backgroundColor: '#01920D' }}
                           onClick={() => iniciarEdicionTitulo(sesion.id, sesion.titulo)}
                           className="mr-2"
                         >
-                          Cambiar Título
+                          <span style={{ color: 'white' }}>Cambiar Título</span>
                         </Button>
                       )}
                       <Button
@@ -1342,7 +1344,7 @@ const Sesiones = () => {
             )}
           </ModalBody>
           <ModalFooter>
-            <Button color="primary" onClick={handleSaveStats}>
+            <Button style={{ backgroundColor: '#01920D', borderColor: '#01920D', color: 'white' }} onClick={handleSaveStats}>
               Guardar
             </Button>
             <Button color="secondary" onClick={() => setModalOpen(false)}>

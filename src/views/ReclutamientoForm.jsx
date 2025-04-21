@@ -163,7 +163,7 @@ const ReclutamientoForm = ({ isOpen, toggle }) => {
       <Modal isOpen={isOpen} toggle={toggle} className="modal-xl">
         <ModalHeader toggle={toggle}>
           <h3 className="text-center" style={{ fontSize: '1.5rem', fontWeight: 'bold' }}>Formulario de Reclutamiento</h3>
-          <hr style={{ border: '1px solid #2dce89', margin: '05px 0' }} />
+          <hr style={{ border: '1px solid#2dce89', margin: '05px 0' }} />
         </ModalHeader>
         <ModalBody>
           <style>

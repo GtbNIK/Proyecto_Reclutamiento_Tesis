@@ -273,98 +273,111 @@ const Estadisticas = () => {
             </Table>
           </CardBody>
         </Card>
-        {/* Gráfica de evolución del jugador */}
-        <Card className="mt-5 mb-5 shadow">
-          <CardHeader>
-            <Row className="align-items-center">
-              <Col md="6">
-                <h3 className="mb-0">Evolución de un Jugador a lo largo de las sesiones</h3>
-                <p className="mb-0">Seleccione un jugador para medir su consistencia a lo largo del tiempo de reclutamiento</p>
-              </Col>
-              <Col md="6">
-                <FormGroup>
-                  <Label>Selecciona un jugador</Label>
-                  <Input
-                    type="select"
-                    value={jugadorSeleccionado}
-                    onChange={e => setJugadorSeleccionado(e.target.value)}
-                  >
-                    {jugadoresCampoList.map(j => (
-                      <option key={j.cedula} value={j.cedula}>
-                        {j.nombre} {j.apellido}
-                      </option>
-                    ))}
-                  </Input>
-                </FormGroup>
-              </Col>
-            </Row>
-          </CardHeader>
-          <CardBody>
-            <div style={{ minHeight: 350 }}>
-              <Line data={dataLine} options={optionsLine} />
-            </div>
-          </CardBody>
-        </Card>
-        {/* Gráfica radar de comparación */}
-        <Card className="mb-5 shadow">
-          <CardHeader>
-            <Row className="align-items-center">
-              <Col md="4">
-                <h3 className="mb-0">Comparativa Radar</h3>
-                <p className="mb-0">Seleccione dos jugadores para comparar sus estadísticas entre sí</p>
-              </Col>
-              <Col md="4">
-                <FormGroup>
-                  <Label>Jugador 1</Label>
-                  <Input
-                    type="select"
-                    value={jugadorRadar1}
-                    onChange={e => setJugadorRadar1(e.target.value)}
-                  >
-                    <option value="">Selecciona un jugador</option>
-                    {jugadoresCampoList
-                      .filter(j => j.cedula !== jugadorRadar2)
-                      .map(j => (
-                        <option key={j.cedula} value={j.cedula}>
-                          {j.nombre} {j.apellido}
-                        </option>
-                    ))}
-                  </Input>
-                </FormGroup>
-              </Col>
-              <Col md="4">
-                <FormGroup>
-                  <Label>Jugador 2</Label>
-                  <Input
-                    type="select"
-                    value={jugadorRadar2}
-                    onChange={e => setJugadorRadar2(e.target.value)}
-                  >
-                    <option value="">Selecciona un jugador</option>
-                    {jugadoresCampoList
-                      .filter(j => j.cedula !== jugadorRadar1)
-                      .map(j => (
-                        <option key={j.cedula} value={j.cedula}>
-                          {j.nombre} {j.apellido}
-                        </option>
-                    ))}
-                  </Input>
-                </FormGroup>
-              </Col>
-            </Row>
-          </CardHeader>
-          <CardBody>
-            {jugadoresCampoList.length < 2 ? (
-              <div className="text-center text-muted py-5">
-                <h4>Agrega al menos dos jugadores para comparar en el radar.</h4>
-              </div>
-            ) : (
-              <div style={{ minHeight: 350 }}>
-                <Radar data={dataRadar} options={optionsRadar} />
-              </div>
-            )}
-          </CardBody>
-        </Card>
+        {/* Gráficas de evolución y radar en la misma fila */}
+        <Row className="mt-5 mb-5">
+          <Col md="6">
+            <Card className="shadow">
+              {/* Gráfica de evolución del jugador */}
+              <CardHeader>
+                <Row className="align-items-center">
+                  <Col md="12">
+                    <h3 className="mb-0">Evolución de un Jugador a lo largo de las sesiones</h3>
+                    <p className="mb-0">Seleccione un jugador para medir su consistencia a lo largo del tiempo de reclutamiento</p>
+                    <div style={{ height: '3px', width: '100%', background: '#01920D', borderRadius: '2px', margin: '7px 0px 7px 0px' }} />
+                  </Col>
+                </Row>
+                <Row>
+                  <Col md="12">
+                    <FormGroup>
+                      <Label>Selecciona un jugador</Label>
+                      <Input
+                        type="select"
+                        value={jugadorSeleccionado}
+                        onChange={e => setJugadorSeleccionado(e.target.value)}
+                      >
+                        {jugadoresCampoList.map(j => (
+                          <option key={j.cedula} value={j.cedula}>
+                            {j.nombre} {j.apellido}
+                          </option>
+                        ))}
+                      </Input>
+                    </FormGroup>
+                  </Col>
+                </Row>
+              </CardHeader>
+              <CardBody>
+                <div style={{ minHeight: 320 }}>
+                  <Line data={dataLine} options={optionsLine} />
+                </div>
+              </CardBody>
+            </Card>
+          </Col>
+          <Col md="6">
+            <Card className="shadow">
+              {/* Gráfica radar de comparación */}
+              <CardHeader>
+                <Row className="align-items-center">
+                  <Col md="12">
+                    <h3 className="mb-0">Comparativa Radar</h3>
+                    <p className="mb-0">Seleccione dos jugadores para comparar sus estadísticas entre sí</p>
+                    <div style={{ height: '3px', width: '100%', background: '#01920D', borderRadius: '2px', margin: '7px 0px 7px 0px' }} />
+                  </Col>
+                </Row>
+                <Row>
+                  <Col md="6">
+                    <FormGroup>
+                      <Label>Jugador 1</Label>
+                      <Input
+                        type="select"
+                        value={jugadorRadar1}
+                        onChange={e => setJugadorRadar1(e.target.value)}
+                      >
+                        <option value="">Selecciona un jugador</option>
+                        {jugadoresCampoList
+                          .filter(j => j.cedula !== jugadorRadar2)
+                          .map(j => (
+                            <option key={j.cedula} value={j.cedula}>
+                              {j.nombre} {j.apellido}
+                            </option>
+                        ))}
+                      </Input>
+                    </FormGroup>
+                  </Col>
+                  <Col md="6">
+                    <FormGroup>
+                      <Label>Jugador 2</Label>
+                      <Input
+                        type="select"
+                        value={jugadorRadar2}
+                        onChange={e => setJugadorRadar2(e.target.value)}
+                      >
+                        <option value="">Selecciona un jugador</option>
+                        {jugadoresCampoList
+                          .filter(j => j.cedula !== jugadorRadar1)
+                          .map(j => (
+                            <option key={j.cedula} value={j.cedula}>
+                              {j.nombre} {j.apellido}
+                            </option>
+                        ))}
+                      </Input>
+                    </FormGroup>
+                  </Col>
+                </Row>
+              </CardHeader>
+              <CardBody>
+                {jugadoresCampoList.length < 2 ? (
+                  <div className="text-center text-muted py-5">
+                    <h4>Agrega al menos dos jugadores para comparar en el radar.</h4>
+                  </div>
+                ) : (
+                  <div style={{ minHeight: 345 }}>
+                    <Radar data={dataRadar} options={optionsRadar} />
+                  </div>
+                )}
+              </CardBody>
+            </Card>
+          </Col>
+        </Row>
       </Container>
     </>
   );

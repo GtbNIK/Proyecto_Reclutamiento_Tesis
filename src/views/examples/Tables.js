@@ -74,11 +74,6 @@ const Tables = () => {
   const toggleFormModal = () => setFormModalOpen(!formModalOpen);
   const { agregarJugadores, setJugadoresReclutados } = useJugadores();
 
-  // Borrar datos de localStorage al cargar el componente
-  useEffect(() => {
-    localStorage.removeItem('solicitudesJugadores');
-  }, []);
-
   // Obtener jugadores desde la base de datos al montar el componente
   useEffect(() => {
     fetch('http://localhost:5000/api/jugadores')
@@ -88,6 +83,17 @@ const Tables = () => {
       })
       .catch(err => console.error("Error al obtener jugadores:", err));
   }, []);
+
+  // Sincronizar solicitudes pendientes en localStorage en tiempo real
+  useEffect(() => {
+    const solicitudesPendientes = players.filter(player => player.estado === 'pendiente' || !player.estado);
+    // Guardar como objeto por cédula
+    const solicitudesObj = {};
+    solicitudesPendientes.forEach(j => {
+      solicitudesObj[j.cedula] = j;
+    });
+    localStorage.setItem('solicitudesJugadores', JSON.stringify(solicitudesObj));
+  }, [players]);
 
   // Filtrar jugadores por estado y búsqueda
   useEffect(() => {
@@ -561,6 +567,7 @@ const Tables = () => {
         >
           <ModalHeader toggle={() => setModalOpen(false)}>
             Información del Jugador
+            <div style={{ height: '3px', width: '100%', background: '#01920D', borderRadius: '2px', margin: '7px 0px 7px 0px' }} />
           </ModalHeader>
           <ModalBody>
             {selectedPlayer && (
@@ -654,6 +661,14 @@ const Tables = () => {
               </Card>
             )}
           </ModalBody>
+          <ModalFooter>
+            <div style={{ width: '100%', display: 'flex', flexDirection: 'column', alignItems: 'center' }}>
+              <img src={require('../../assets/img/brand/logo.png')} alt="Logo" style={{ height: '50px', marginBottom: '25px' , marginTop: '-15px'}} />
+              <Button color="secondary" onClick={() => setModalOpen(false)}>
+                Cerrar
+              </Button>
+            </div>
+          </ModalFooter>
         </Modal>
 
         <ReclutamientoForm isOpen={formModalOpen} toggle={toggleFormModal} addPlayer={addPlayer} />

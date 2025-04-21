@@ -78,7 +78,7 @@ const AdminNavbar = (props) => {
           ¿Está seguro de que desea cerrar sesión?
         </ModalBody>
         <ModalFooter>
-          <Button color="primary" onClick={handleLogout}>Sí</Button>
+          <Button style={{ backgroundColor: '#01920D', borderColor: '#01920D', color: 'white' }} onClick={handleLogout}>Sí</Button>
           <Button color="secondary" onClick={() => setLogoutModalOpen(false)}>No</Button>
         </ModalFooter>
       </Modal>
