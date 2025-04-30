@@ -1,6 +1,8 @@
-import React, { useState } from "react";
+import React, { useState, useRef } from "react";
 import { Modal, ModalHeader, ModalBody, ModalFooter, Button, Form, FormGroup, Label, Input, Row, Col } from "reactstrap";
 import defaultImage from '../assets/img/theme/football-training-form.jpg';
+import jsPDF from "jspdf";
+import html2canvas from "html2canvas";
 
 const ReclutamientoForm = ({ isOpen, toggle }) => {
   const [formData, setFormData] = useState({
@@ -27,6 +29,8 @@ const ReclutamientoForm = ({ isOpen, toggle }) => {
     Defensa: ["Defensa Central", "Lateral"],
     Portero: []
   };
+
+  const formRef = useRef(null); // Referencia para el contenido a exportar
 
   const validateField = (name, value) => {
     switch (name) {
@@ -149,8 +153,21 @@ const ReclutamientoForm = ({ isOpen, toggle }) => {
     }));
   };
 
-  const handlePrint = () => {
-    window.print();
+  const handlePrint = async () => {
+    if (formRef.current) {
+      const input = formRef.current;
+      const canvas = await html2canvas(input, { scale: 2 });
+      const imgData = canvas.toDataURL('image/png');
+      const pdf = new jsPDF({ orientation: 'portrait', unit: 'mm', format: 'a4' });
+      const pageWidth = pdf.internal.pageSize.getWidth();
+      const pageHeight = pdf.internal.pageSize.getHeight();
+      // Calcular el tamaño de la imagen para que encaje en la página
+      const imgProps = pdf.getImageProperties(imgData);
+      const pdfWidth = pageWidth;
+      const pdfHeight = (imgProps.height * pdfWidth) / imgProps.width;
+      pdf.addImage(imgData, 'PNG', 0, 0, pdfWidth, pdfHeight);
+      pdf.save('formulario_reclutamiento.pdf');
+    }
   };
 
   const handleCloseSuccess = () => {
@@ -192,197 +209,171 @@ const ReclutamientoForm = ({ isOpen, toggle }) => {
               }
             `}
           </style>
-          <Form onSubmit={handleSubmit}>
-            <Row>
-              <Col md={8}>
-                <Row>
-                  <Col md={6}>
-                    <FormGroup>
-                      <Label for="nombre">Nombre</Label>
-                      <Input 
-                        type="text" 
-                        name="nombre" 
-                        placeholder="Ingrese su primer Nombre"
-                        id="nombre" 
-                        value={formData.nombre} 
-                        onChange={handleChange} 
-                        required 
-                        style={{
-                          backgroundColor: '#f8f9fe',
-                          border: '1px solid #e9ecef',
-                          borderRadius: '0.375rem',
-                        }}
-                      />
-                    </FormGroup>
-                  </Col>
-                  <Col md={6}>
-                    <FormGroup>
-                      <Label for="apellido">Apellido</Label>
-                      <Input 
-                        type="text" 
-                        name="apellido" 
-                        placeholder="Ingrese su primer Apellido"
-                        id="apellido" 
-                        value={formData.apellido} 
-                        onChange={handleChange} 
-                        required 
-                        style={{
-                          backgroundColor: '#f8f9fe',
-                          border: '1px solid #e9ecef',
-                          borderRadius: '0.375rem',
-                        }}
-                      />
-                    </FormGroup>
-                  </Col>
-                </Row>
-
-                <Row>
-                  <Col md={6}>
-                    <FormGroup>
-                      <Label for="cedula">Cédula</Label>
-                      <Input 
-                        type="text" 
-                        name="cedula" 
-                        placeholder="Ingrese su cédula"
-                        id="cedula" 
-                        value={formData.cedula} 
-                        onChange={handleChange} 
-                        required 
-                        invalid={!!errors.cedula}
-                        style={{
-                          backgroundColor: '#f8f9fe',
-                          border: '1px solid #e9ecef',
-                          borderRadius: '0.375rem',
-                        }}
-                      />
-                      {errors.cedula && <div className="text-danger">{errors.cedula}</div>}
-                    </FormGroup>
-                  </Col>
-                  <Col md={6}>
-                    <FormGroup>
-                      <Label for="edad">Edad</Label>
-                      <Input 
-                        type="number" 
-                        name="edad" 
-                        placeholder="Entre 16-25 años"
-                        id="edad" 
-                        value={formData.edad} 
-                        onChange={handleChange} 
-                        min="16" 
-                        max="25" 
-                        required 
-                        invalid={!!errors.edad}
-                        style={{
-                          backgroundColor: '#f8f9fe',
-                          border: '1px solid #e9ecef',
-                          borderRadius: '0.375rem',
-                        }}
-                      />
-                      {errors.edad && <div className="text-danger">{errors.edad}</div>}
-                    </FormGroup>
-                  </Col>
-                </Row>
-
-                <Row>
-                  <Col md={6}>
-                    <FormGroup>
-                      <Label for="altura">Altura: {formData.altura || 150} cm</Label>
-                      <Input 
-                        type="range" 
-                        name="altura" 
-                        id="altura" 
-                        value={formData.altura || 150} 
-                        onChange={handleChange} 
-                        min="150" 
-                        max="210" 
-                        required 
-                        style={{
-                          width: '100%',
-                          height: '6px',
-                          background: '#2dce89',
-                          borderRadius: '3px',
-                          outline: 'none',
-                          cursor: 'pointer'
-                        }}
-                      />
-                      <div className="d-flex justify-content-between mt-1">
-                        <small style={{ color: '#6c757d' }}>150 cm</small>
-                        <small style={{ color: '#6c757d' }}>210 cm</small>
-                      </div>
-                      {errors.altura && <div className="text-danger">{errors.altura}</div>}
-                    </FormGroup>
-                  </Col>
-                  <Col md={6}>
-                    <FormGroup>
-                      <Label>Pierna Hábil</Label>
-                      <div className="d-flex gap-3">
-                        <Button
-                          type="button"
-                          onClick={() => handlePiernaHabilClick("Derecha")}
-                          style={{
-                            backgroundColor: formData.piernaHabil === "Derecha" ? "#2dce89" : "white",
-                            color: formData.piernaHabil === "Derecha" ? "white" : "#2dce89",
-                            border: "2px solid #2dce89",
-                            transition: "all 0.15s ease",
-                            flex: 1
-                          }}
-                        >
-                          Derecha
-                        </Button>
-                        <Button
-                          type="button"
-                          onClick={() => handlePiernaHabilClick("Izquierda")}
-                          style={{
-                            backgroundColor: formData.piernaHabil === "Izquierda" ? "#2dce89" : "white",
-                            color: formData.piernaHabil === "Izquierda" ? "white" : "#2dce89",
-                            border: "2px solid #2dce89",
-                            transition: "all 0.15s ease",
-                            flex: 1
-                          }}
-                        >
-                          Izquierda
-                        </Button>
-                      </div>
-                    </FormGroup>
-                  </Col>
-                </Row>
-
-                <Row>
-                  <Col md={6}>
-                    <FormGroup>
-                      <Label for="posicion">Posición</Label>
-                      <Input
-                        type="select"
-                        name="posicion"
-                        id="posicion"
-                        value={formData.posicion}
-                        onChange={handleChange}
-                        required
-                        style={{
-                          backgroundColor: '#f8f9fe',
-                          border: '1px solid #e9ecef',
-                          borderRadius: '0.375rem',
-                          boxShadow: '0 1px 3px rgba(50,50,93,.15), 0 1px 0 rgba(0,0,0,.02)',
-                          transition: 'box-shadow .15s ease, border-color .15s ease',
-                          cursor: 'pointer'
-                        }}
-                      >
-                        <option value="">Selecciona una posición</option>
-                        {posiciones.map((pos) => (
-                          <option key={pos} value={pos}>{pos}</option>
-                        ))}
-                      </Input>
-                    </FormGroup>
-                  </Col>
-                  {formData.posicion && formData.posicion !== "Portero" && (
+          <div ref={formRef} style={{ background: 'white', padding: 20 }}>
+            <Form onSubmit={handleSubmit}>
+              <Row>
+                <Col md={8}>
+                  <Row>
                     <Col md={6}>
                       <FormGroup>
-                        <Label for="especializacion">Especialización</Label>
+                        <Label for="nombre">Nombre</Label>
+                        <Input 
+                          type="text" 
+                          name="nombre" 
+                          placeholder="Ingrese su primer Nombre"
+                          id="nombre" 
+                          value={formData.nombre} 
+                          onChange={handleChange} 
+                          required 
+                          style={{
+                            backgroundColor: '#f8f9fe',
+                            border: '1px solid #e9ecef',
+                            borderRadius: '0.375rem',
+                          }}
+                        />
+                      </FormGroup>
+                    </Col>
+                    <Col md={6}>
+                      <FormGroup>
+                        <Label for="apellido">Apellido</Label>
+                        <Input 
+                          type="text" 
+                          name="apellido" 
+                          placeholder="Ingrese su primer Apellido"
+                          id="apellido" 
+                          value={formData.apellido} 
+                          onChange={handleChange} 
+                          required 
+                          style={{
+                            backgroundColor: '#f8f9fe',
+                            border: '1px solid #e9ecef',
+                            borderRadius: '0.375rem',
+                          }}
+                        />
+                      </FormGroup>
+                    </Col>
+                  </Row>
+
+                  <Row>
+                    <Col md={6}>
+                      <FormGroup>
+                        <Label for="cedula">Cédula</Label>
+                        <Input 
+                          type="text" 
+                          name="cedula" 
+                          placeholder="Ingrese su cédula"
+                          id="cedula" 
+                          value={formData.cedula} 
+                          onChange={handleChange} 
+                          required 
+                          invalid={!!errors.cedula}
+                          style={{
+                            backgroundColor: '#f8f9fe',
+                            border: '1px solid #e9ecef',
+                            borderRadius: '0.375rem',
+                          }}
+                        />
+                        {errors.cedula && <div className="text-danger">{errors.cedula}</div>}
+                      </FormGroup>
+                    </Col>
+                    <Col md={6}>
+                      <FormGroup>
+                        <Label for="edad">Edad</Label>
+                        <Input 
+                          type="number" 
+                          name="edad" 
+                          placeholder="Entre 16-25 años"
+                          id="edad" 
+                          value={formData.edad} 
+                          onChange={handleChange} 
+                          min="16" 
+                          max="25" 
+                          required 
+                          invalid={!!errors.edad}
+                          style={{
+                            backgroundColor: '#f8f9fe',
+                            border: '1px solid #e9ecef',
+                            borderRadius: '0.375rem',
+                          }}
+                        />
+                        {errors.edad && <div className="text-danger">{errors.edad}</div>}
+                      </FormGroup>
+                    </Col>
+                  </Row>
+
+                  <Row>
+                    <Col md={6}>
+                      <FormGroup>
+                        <Label for="altura">Altura: {formData.altura || 150} cm</Label>
+                        <Input 
+                          type="range" 
+                          name="altura" 
+                          id="altura" 
+                          value={formData.altura || 150} 
+                          onChange={handleChange} 
+                          min="150" 
+                          max="210" 
+                          required 
+                          style={{
+                            width: '100%',
+                            height: '6px',
+                            background: '#2dce89',
+                            borderRadius: '3px',
+                            outline: 'none',
+                            cursor: 'pointer'
+                          }}
+                        />
+                        <div className="d-flex justify-content-between mt-1">
+                          <small style={{ color: '#6c757d' }}>150 cm</small>
+                          <small style={{ color: '#6c757d' }}>210 cm</small>
+                        </div>
+                        {errors.altura && <div className="text-danger">{errors.altura}</div>}
+                      </FormGroup>
+                    </Col>
+                    <Col md={6}>
+                      <FormGroup>
+                        <Label>Pierna Hábil</Label>
+                        <div className="d-flex gap-3">
+                          <Button
+                            type="button"
+                            onClick={() => handlePiernaHabilClick("Derecha")}
+                            style={{
+                              backgroundColor: formData.piernaHabil === "Derecha" ? "#2dce89" : "white",
+                              color: formData.piernaHabil === "Derecha" ? "white" : "#2dce89",
+                              border: "2px solid #2dce89",
+                              transition: "all 0.15s ease",
+                              flex: 1
+                            }}
+                          >
+                            Derecha
+                          </Button>
+                          <Button
+                            type="button"
+                            onClick={() => handlePiernaHabilClick("Izquierda")}
+                            style={{
+                              backgroundColor: formData.piernaHabil === "Izquierda" ? "#2dce89" : "white",
+                              color: formData.piernaHabil === "Izquierda" ? "white" : "#2dce89",
+                              border: "2px solid #2dce89",
+                              transition: "all 0.15s ease",
+                              flex: 1
+                            }}
+                          >
+                            Izquierda
+                          </Button>
+                        </div>
+                      </FormGroup>
+                    </Col>
+                  </Row>
+
+                  <Row>
+                    <Col md={6}>
+                      <FormGroup>
+                        <Label for="posicion">Posición</Label>
                         <Input
                           type="select"
-                          name="especializacion"
-                          id="especializacion"
-                          value={formData.especializacion}
+                          name="posicion"
+                          id="posicion"
+                          value={formData.posicion}
                           onChange={handleChange}
                           required
                           style={{
@@ -394,77 +385,105 @@ const ReclutamientoForm = ({ isOpen, toggle }) => {
                             cursor: 'pointer'
                           }}
                         >
-                          <option value="">Selecciona una especialización</option>
-                          {especializaciones[formData.posicion]?.map((esp) => (
-                            <option key={esp} value={esp}>{esp}</option>
+                          <option value="">Selecciona una posición</option>
+                          {posiciones.map((pos) => (
+                            <option key={pos} value={pos}>{pos}</option>
                           ))}
                         </Input>
                       </FormGroup>
                     </Col>
-                  )}
-                </Row>
+                    {formData.posicion && formData.posicion !== "Portero" && (
+                      <Col md={6}>
+                        <FormGroup>
+                          <Label for="especializacion">Especialización</Label>
+                          <Input
+                            type="select"
+                            name="especializacion"
+                            id="especializacion"
+                            value={formData.especializacion}
+                            onChange={handleChange}
+                            required
+                            style={{
+                              backgroundColor: '#f8f9fe',
+                              border: '1px solid #e9ecef',
+                              borderRadius: '0.375rem',
+                              boxShadow: '0 1px 3px rgba(50,50,93,.15), 0 1px 0 rgba(0,0,0,.02)',
+                              transition: 'box-shadow .15s ease, border-color .15s ease',
+                              cursor: 'pointer'
+                            }}
+                          >
+                            <option value="">Selecciona una especialización</option>
+                            {especializaciones[formData.posicion]?.map((esp) => (
+                              <option key={esp} value={esp}>{esp}</option>
+                            ))}
+                          </Input>
+                        </FormGroup>
+                      </Col>
+                    )}
+                  </Row>
 
-                <FormGroup>
-                  <Label for="trayectoria">Trayectoria (Opcional)</Label>
-                  <Input 
-                    type="textarea" 
-                    name="trayectoria" 
-                    id="trayectoria" 
-                    value={formData.trayectoria} 
-                    onChange={handleChange}
-                    placeholder="Ejemplo: Club Deportivo Universitario (2020-2021), Academia de Fútbol Juvenil (2021-2022)"
-                    style={{
-                      minHeight: "100px",
-                      backgroundColor: '#f8f9fe',
-                      border: '1px solid #e9ecef',
-                      borderRadius: '0.375rem',
-                    }}
-                  />
-                </FormGroup>
-              </Col>
+                  <FormGroup>
+                    <Label for="trayectoria">Trayectoria (Opcional)</Label>
+                    <Input 
+                      type="textarea" 
+                      name="trayectoria" 
+                      id="trayectoria" 
+                      value={formData.trayectoria} 
+                      onChange={handleChange}
+                      placeholder="Ejemplo: Club Deportivo Universitario (2020-2021), Academia de Fútbol Juvenil (2021-2022)"
+                      style={{
+                        minHeight: "100px",
+                        backgroundColor: '#f8f9fe',
+                        border: '1px solid #e9ecef',
+                        borderRadius: '0.375rem',
+                      }}
+                    />
+                  </FormGroup>
+                </Col>
 
-              <Col md={4} className="d-flex align-items-center justify-content-center">
-                <div 
-                  style={{
-                    width: '100%',
-                    height: '100%',
-                    minHeight: '400px',
-                    backgroundColor: '#f8f9fe',
-                    borderRadius: '0.375rem',
-                    display: 'flex',
-                    alignItems: 'center',
-                    justifyContent: 'center',
-                    flexDirection: 'column',
-                    padding: '20px',
-                    textAlign: 'center',
-                    position: 'relative',
-                    overflow: 'hidden'
-                  }}
-                >
-                  <img 
-                    src={defaultImage} 
-                    alt="Balones de fútbol" 
+                <Col md={4} className="d-flex align-items-center justify-content-center">
+                  <div 
                     style={{
                       width: '100%',
                       height: '100%',
-                      objectFit: 'cover',
-                      borderRadius: '0.375rem'
+                      minHeight: '400px',
+                      backgroundColor: '#f8f9fe',
+                      borderRadius: '0.375rem',
+                      display: 'flex',
+                      alignItems: 'center',
+                      justifyContent: 'center',
+                      flexDirection: 'column',
+                      padding: '20px',
+                      textAlign: 'center',
+                      position: 'relative',
+                      overflow: 'hidden'
                     }}
-                  />
-                </div>
-              </Col>
-            </Row>
+                  >
+                    <img 
+                      src={defaultImage} 
+                      alt="Balones de fútbol" 
+                      style={{
+                        width: '100%',
+                        height: '100%',
+                        objectFit: 'cover',
+                        borderRadius: '0.375rem'
+                      }}
+                    />
+                  </div>
+                </Col>
+              </Row>
 
-            <ModalFooter>
-              <Button 
-                color="success"
-                type="submit"
-              >
-                Confirmar
-              </Button>
-              <Button color="secondary" onClick={toggle}>Volver</Button>
-            </ModalFooter>
-          </Form>
+              <ModalFooter>
+                <Button 
+                  color="success"
+                  type="submit"
+                >
+                  Confirmar
+                </Button>
+                <Button color="secondary" onClick={toggle}>Volver</Button>
+              </ModalFooter>
+            </Form>
+          </div>
         </ModalBody>
       </Modal>
 

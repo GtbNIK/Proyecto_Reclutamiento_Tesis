@@ -37,6 +37,9 @@ npm install
 3. Instala AOS para las animaciones:
 npm install aos --save
 
+Dependencias para imprimir el pdf:
+npm install jspdf html2canvas
+
 Conecta con la base de datos:
 node src/server.js
 
