@@ -118,24 +118,18 @@ const Jugadores = () => {
   };
 
   const confirmarEliminacion = async () => {
-    // Eliminar en la base de datos
+    // Cambiar el estado del jugador a "pendiente" en la base de datos
     await fetch(`http://localhost:5000/api/jugadores/${jugadorAEliminar}`, {
-      method: 'DELETE',
+      method: 'PUT',
+      headers: {
+        'Content-Type': 'application/json',
+      },
+      body: JSON.stringify({ estado: 'pendiente' }),
     });
+    // Actualizar el estado local
     const nuevosJugadores = { ...jugadoresReclutados };
-    const jugadorRestaurado = nuevosJugadores[jugadorAEliminar];
     delete nuevosJugadores[jugadorAEliminar];
     setJugadoresReclutados(nuevosJugadores);
-    // Restaurar a solicitudesJugadores en localStorage
-    if (jugadorRestaurado) {
-      const solicitudes = localStorage.getItem('solicitudesJugadores');
-      let solicitudesObj = solicitudes ? JSON.parse(solicitudes) : {};
-      solicitudesObj[jugadorAEliminar] = {
-        ...jugadorRestaurado,
-        estado: 'pendiente'
-      };
-      localStorage.setItem('solicitudesJugadores', JSON.stringify(solicitudesObj));
-    }
     // Recargar la lista de jugadores aprobados desde el backend
     fetch('http://localhost:5000/api/jugadores')
       .then(res => res.json())
