@@ -19,6 +19,7 @@ const ReclutamientoForm = ({ isOpen, toggle }) => {
 
   const [errors, setErrors] = useState({}); // Estado para manejar errores
   const [showSuccessModal, setShowSuccessModal] = useState(false);
+  const [showErrorModal, setShowErrorModal] = useState(false); // Nuevo estado para el modal de error
 
   // Definir las opciones de posiciones y especializaciones
   const posiciones = ["Delantero", "Mediocampista", "Defensa", "Portero"];
@@ -106,12 +107,32 @@ const ReclutamientoForm = ({ isOpen, toggle }) => {
       const error = validateField(key, formData[key]);
       if (error) newErrors[key] = error;
     });
-
+  
     if (Object.keys(newErrors).length > 0) {
       setErrors(newErrors);
       return;
     }
-
+  
+    // Verificar si la cédula ya existe en la base de datos
+    try {
+      const response = await fetch(`http://localhost:5000/api/jugadores/cedula/${formData.cedula}`);
+      if (!response.ok) {
+        throw new Error(`Error al verificar la cédula: ${response.statusText}`);
+      }
+      const data = await response.json();
+      if (data.exists) {
+        setShowErrorModal(true); // Mostrar modal de error
+        return; // Detener el proceso si la cédula ya existe
+      }
+    } catch (error) {
+      console.error("Error de red:", error);
+      setErrors(prev => ({
+        ...prev,
+        cedula: 'Error al verificar la cédula'
+      }));
+      return; // Detener el proceso si hay un error de red
+    }
+  
     const jugador = {
       nombre: formData.nombre,
       apellido: formData.apellido,
@@ -124,7 +145,7 @@ const ReclutamientoForm = ({ isOpen, toggle }) => {
       piernaHabil: formData.piernaHabil,
       estado: "pendiente"
     };
-
+  
     try {
       const response = await fetch('http://localhost:5000/api/jugadores', {
         method: 'POST',
@@ -140,10 +161,22 @@ const ReclutamientoForm = ({ isOpen, toggle }) => {
       } else {
         const errorData = await response.json();
         console.error("Error al agregar jugador:", errorData);
+        setErrors(prev => ({
+          ...prev,
+          general: 'Error al agregar el jugador'
+        }));
       }
     } catch (error) {
       console.error("Error de red:", error);
+      setErrors(prev => ({
+        ...prev,
+        general: 'Error de red al agregar el jugador'
+      }));
     }
+  };
+
+  const handleCloseErrorModal = () => {
+    setShowErrorModal(false); // Cerrar modal de error
   };
 
   const handlePiernaHabilClick = (pierna) => {
@@ -525,6 +558,31 @@ const ReclutamientoForm = ({ isOpen, toggle }) => {
           </div>
         </ModalBody>
       </Modal>
+            {/* Modal de error para cédula duplicada */}
+      <Modal 
+        isOpen={showErrorModal} 
+        toggle={handleCloseErrorModal}
+        centered
+        size="sm"
+      >
+        <ModalBody className="text-center p-5">
+          <div className="mb-4">
+            <i className="fas fa-exclamation-circle fa-4x" style={{ color: '#f5365c' }}></i>
+          </div>
+          <h4 className="mb-4">La cédula ingresada ya está registrada</h4>
+          <Button
+            color="danger"
+            onClick={handleCloseErrorModal}
+            style={{
+              backgroundColor: '#f5365c',
+              borderColor: '#f5365c',
+              padding: '0.75rem 1.5rem',
+            }}
+          >
+            Cerrar
+          </Button>
+        </ModalBody>
+    </Modal>
     </>
   );
 };

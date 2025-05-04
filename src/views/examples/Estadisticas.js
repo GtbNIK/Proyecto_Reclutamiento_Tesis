@@ -34,6 +34,7 @@ const Estadisticas = () => {
   // Obtener lista de jugadores de campo para el dropdown
   const jugadoresCampoList = Object.values(jugadoresReclutados).filter(j => j.posicion && !j.posicion.toLowerCase().includes('portero'));
   const [jugadorSeleccionado, setJugadorSeleccionado] = useState(jugadoresCampoList[0]?.cedula || '');
+  const [jugadorSeleccionadoPDF, setJugadorSeleccionadoPDF] = useState(jugadoresCampoList[0]?.cedula || ''); // Nueva variable para el select del PDF
 
   // Construir datos para la gráfica de líneas
   const metricas = [
@@ -374,6 +375,48 @@ const Estadisticas = () => {
                     <Radar data={dataRadar} options={optionsRadar} />
                   </div>
                 )}
+              </CardBody>
+            </Card>
+          </Col>
+        </Row>
+      {/* Nueva sección para emitir registros finales del jugador */}
+      <Row className="mt-5 mb-5">
+          <Col md="12">
+            <Card className="shadow">
+              <CardHeader>
+                <Row className="align-items-center">
+                  <Col md="12">
+                    <h3 className="mb-0">Emitir Registros Finales de Jugador</h3>
+                    <p className="mb-0">Seleccione un jugador para generar un PDF con sus estadísticas finales</p>
+                    <div style={{ height: '3px', width: '100%', background: '#01920D', borderRadius: '2px', margin: '7px 0px 7px 0px' }} />
+                  </Col>
+                </Row>
+              </CardHeader>
+              <CardBody>
+                <Row className="align-items-center">
+                  <Col md="6">
+                    <FormGroup>
+                      <Label>Selecciona un jugador</Label>
+                      <Input
+                        type="select"
+                        value={jugadorSeleccionadoPDF}
+                        onChange={e => setJugadorSeleccionadoPDF(e.target.value)}
+                      >
+                        {jugadoresCampoList.map(j => (
+                          <option key={j.cedula} value={j.cedula}>
+                            {j.nombre} {j.apellido}
+                          </option>
+                        ))}
+                      </Input>
+                    </FormGroup>
+                  </Col>
+                  <Col md="6">
+                    <Button 
+                    style={{ width: '100%', marginTop: '8px',  backgroundColor: '#01920D', borderColor: '#01920D', color: 'white' }}>
+                      Emitir PDF
+                    </Button>
+                  </Col>
+                </Row>
               </CardBody>
             </Card>
           </Col>

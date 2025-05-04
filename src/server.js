@@ -27,6 +27,20 @@ db.connect((err) => {
     console.log('Conectado a la base de datos MySQL');
 });
 
+// Ruta para verificar si una cédula ya existe
+app.get('/api/jugadores/cedula/:cedula', (req, res) => {
+    const { cedula } = req.params;
+    const query = 'SELECT COUNT(*) as count FROM jugadores WHERE cedula = ?';
+    db.query(query, [cedula], (err, results) => {
+      if (err) {
+        console.error("Error al verificar la cédula:", err);
+        return res.status(500).send({ error: "Error al verificar la cédula", details: err });
+      }
+      const exists = results[0].count > 0;
+      res.json({ exists });
+    });
+  });
+
 // Ruta para agregar un jugador
 app.post('/api/jugadores', (req, res) => {
     const jugador = req.body;
