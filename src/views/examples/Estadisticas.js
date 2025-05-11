@@ -1,4 +1,4 @@
-import React, { useState } from "react";
+import React, { useState, useRef } from "react";
 import { 
   Card,
   CardHeader,
@@ -25,6 +25,8 @@ import { useJugadores } from "../../context/JugadoresContext";
 import { consolidarEstadisticasPorJugador } from "../../utils/estadisticas";
 import { Line } from 'react-chartjs-2';
 import { Radar } from 'react-chartjs-2';
+import jsPDF from "jspdf";
+import html2canvas from "html2canvas";
 
 const Estadisticas = () => {
   const { jugadoresReclutados } = useJugadores();
@@ -154,6 +156,220 @@ const Estadisticas = () => {
         pointLabels: { font: { size: 14 } }
       }
     }
+  };
+
+  // Función para obtener estadísticas acumuladas y promedios del jugador desde las sesiones
+  const getEstadisticasJugador = (cedula) => {
+    // Filtrar todas las sesiones donde el jugador participó
+    const sesionesJugador = sesiones.filter(s => s.jugadores.some(j => j.cedula === cedula));
+    if (sesionesJugador.length === 0) return null;
+    let totales = {
+      goles: 0,
+      asistencias: 0,
+      duelosGanados: 0,
+      duelosTotales: 0,
+      pasesCompletados: 0,
+      pasesIntentados: 0,
+      tirosAlArco: 0,
+      tirosTotales: 0,
+      recuperaciones: 0,
+      perdidas: 0,
+      intercepciones: 0,
+      bloqueos: 0,
+      porcentajeDuelos: 0,
+      efectividadPases: 0,
+      precisionTiros: 0,
+      efectividadTiros: 0,
+      porcentajeParadas: 0,
+      paradasRealizadas: 0,
+      tirosAPorteria: 0,
+      golesConcedidos: 0,
+      pasesExitososPortero: 0,
+      duelosManoAManoGanados: 0,
+      duelosManoAManoTotales: 0,
+      porcentajeDuelosManoAMano: 0,
+      duelosAereosGanados: 0,
+      duelosAereosTotales: 0,
+      porcentajeDuelosAereos: 0
+    };
+    sesionesJugador.forEach(sesion => {
+      const jugador = sesion.jugadores.find(j => j.cedula === cedula);
+      if (!jugador) return;
+      totales.goles += jugador.goles || 0;
+      totales.asistencias += jugador.asistencias || 0;
+      totales.duelosGanados += jugador.duelos?.ganados || 0;
+      totales.duelosTotales += jugador.duelos?.total || 0;
+      totales.pasesCompletados += jugador.pases?.completados || 0;
+      totales.pasesIntentados += jugador.pases?.intentados || 0;
+      totales.tirosAlArco += jugador.tiros?.alArco || 0;
+      totales.tirosTotales += jugador.tiros?.total || 0;
+      totales.recuperaciones += jugador.posesion?.recuperaciones || 0;
+      totales.perdidas += jugador.posesion?.perdidas || 0;
+      totales.intercepciones += jugador.intercepciones || 0;
+      totales.bloqueos += jugador.bloqueos || 0;
+      totales.paradasRealizadas += jugador.paradasRealizadas || 0;
+      totales.tirosAPorteria += jugador.tirosAPorteria || 0;
+      totales.pasesExitososPortero += jugador.pasesExitososPortero || 0;
+      totales.duelosManoAManoGanados += jugador.duelosManoAManoGanados || 0;
+      totales.duelosManoAManoTotales += jugador.duelosManoAManoTotales || 0;
+      totales.duelosAereosGanados += jugador.duelosAereos?.ganados || 0;
+      totales.duelosAereosTotales += jugador.duelosAereos?.total || 0;
+    });
+    const sesionesCount = sesionesJugador.length;
+    // Cálculos de porcentajes y promedios
+    totales.porcentajeDuelos = totales.duelosTotales > 0 ? Math.round((totales.duelosGanados / totales.duelosTotales) * 100) : 0;
+    totales.efectividadPases = totales.pasesIntentados > 0 ? Math.round((totales.pasesCompletados / totales.pasesIntentados) * 100) : 0;
+    totales.precisionTiros = totales.tirosTotales > 0 ? Math.round((totales.tirosAlArco / totales.tirosTotales) * 100) : 0;
+    totales.efectividadTiros = totales.tirosTotales > 0 ? Math.round((totales.tirosAlArco / totales.tirosTotales) * 100) : 0;
+    totales.golesConcedidos = totales.tirosAPorteria - totales.paradasRealizadas;
+    totales.porcentajeParadas = totales.tirosAPorteria > 0 ? Math.round((totales.paradasRealizadas / totales.tirosAPorteria) * 100) : 0;
+    totales.porcentajeDuelosManoAMano = totales.duelosManoAManoTotales > 0 ? Math.round((totales.duelosManoAManoGanados / totales.duelosManoAManoTotales) * 100) : 0;
+    totales.porcentajeDuelosAereos = totales.duelosAereosTotales > 0 ? Math.round((totales.duelosAereosGanados / totales.duelosAereosTotales) * 100) : 0;
+    // Promedios
+    const promedios = {
+      goles: (totales.goles / sesionesCount).toFixed(2),
+      asistencias: (totales.asistencias / sesionesCount).toFixed(2),
+      duelosGanados: (totales.duelosGanados / sesionesCount).toFixed(2),
+      duelosTotales: (totales.duelosTotales / sesionesCount).toFixed(2),
+      pasesCompletados: (totales.pasesCompletados / sesionesCount).toFixed(2),
+      pasesIntentados: (totales.pasesIntentados / sesionesCount).toFixed(2),
+      tirosAlArco: (totales.tirosAlArco / sesionesCount).toFixed(2),
+      tirosTotales: (totales.tirosTotales / sesionesCount).toFixed(2),
+      recuperaciones: (totales.recuperaciones / sesionesCount).toFixed(2),
+      perdidas: (totales.perdidas / sesionesCount).toFixed(2),
+      intercepciones: (totales.intercepciones / sesionesCount).toFixed(2),
+      bloqueos: (totales.bloqueos / sesionesCount).toFixed(2),
+      paradasRealizadas: (totales.paradasRealizadas / sesionesCount).toFixed(2),
+      tirosAPorteria: (totales.tirosAPorteria / sesionesCount).toFixed(2),
+      golesConcedidos: (totales.golesConcedidos / sesionesCount).toFixed(2),
+      pasesExitososPortero: (totales.pasesExitososPortero / sesionesCount).toFixed(2),
+      duelosManoAManoGanados: (totales.duelosManoAManoGanados / sesionesCount).toFixed(2),
+      duelosManoAManoTotales: (totales.duelosManoAManoTotales / sesionesCount).toFixed(2),
+      duelosAereosGanados: (totales.duelosAereosGanados / sesionesCount).toFixed(2),
+      duelosAereosTotales: (totales.duelosAereosTotales / sesionesCount).toFixed(2)
+    };
+    return { totales, promedios, sesionesCount };
+  };
+
+  const lineChartRef = useRef(null);
+  const radarChartRef = useRef(null);
+
+  // Función para emitir PDF de estadísticas del jugador seleccionado
+  const handleEmitirPDF = async () => {
+    const jugador = jugadoresCampoList.find(j => j.cedula === jugadorSeleccionadoPDF);
+    if (!jugador) return;
+    const estadisticas = getEstadisticasJugador(jugador.cedula);
+    if (!estadisticas) return;
+    const { totales, promedios, sesionesCount } = estadisticas;
+    const doc = new jsPDF();
+    let y = 20;
+    // Encabezado con fondo
+    doc.setFillColor(1, 146, 13); // Verde oscuro
+    doc.rect(0, 0, 210, 25, 'F');
+    doc.setTextColor(255, 255, 255);
+    doc.setFontSize(20);
+    doc.text("Reporte de Estadísticas del Jugador", 105, 16, { align: "center" });
+    doc.setFontSize(12);
+    doc.text("Sistema de Reclutamiento de Futbolistas", 105, 23, { align: "center" });
+    doc.setTextColor(0, 0, 0);
+    y = 32;
+    // Datos personales
+    doc.setFontSize(14);
+    doc.text("Datos del Jugador", 15, y);
+    doc.setDrawColor(44, 206, 137); // Verde claro
+    doc.line(15, y + 2, 195, y + 2);
+    y += 8;
+    doc.setFontSize(12);
+    doc.text(`Nombre:`, 20, y); doc.text(`${jugador.nombre} ${jugador.apellido}`, 60, y);
+    y += 7;
+    doc.text(`Cédula:`, 20, y); doc.text(`${jugador.cedula}`, 60, y);
+    y += 7;
+    doc.text(`Posición:`, 20, y); doc.text(`${jugador.posicion}`, 60, y);
+    y += 7;
+    doc.text(`Sesiones jugadas:`, 20, y); doc.text(`${sesionesCount}`, 60, y);
+    y += 10;
+    // Sección de estadísticas
+    doc.setFontSize(14);
+    doc.text("Estadísticas Totales (T) / Promedio (P)", 15, y);
+    doc.setDrawColor(44, 206, 137);
+    doc.line(15, y + 2, 195, y + 2);
+    y += 8;
+    doc.setFontSize(12);
+    const stats = [
+      [`Goles (T/P)`, `${totales.goles} / ${promedios.goles}`],
+      [`Asistencias (T/P)`, `${totales.asistencias} / ${promedios.asistencias}`],
+      [`Duelos Ganados (T/P)`, `${totales.duelosGanados} / ${promedios.duelosGanados}`],
+      [`Duelos Totales (T/P)`, `${totales.duelosTotales} / ${promedios.duelosTotales}`],
+      [`% Duelos`, `${totales.porcentajeDuelos}%`],
+      [`Pases Completados (T/P)`, `${totales.pasesCompletados} / ${promedios.pasesCompletados}`],
+      [`Pases Intentados (T/P)`, `${totales.pasesIntentados} / ${promedios.pasesIntentados}`],
+      [`% Efectividad Pases`, `${totales.efectividadPases}%`],
+      [`Tiros al Arco (T/P)`, `${totales.tirosAlArco} / ${promedios.tirosAlArco}`],
+      [`Tiros Totales (T/P)`, `${totales.tirosTotales} / ${promedios.tirosTotales}`],
+      [`% Precisión Tiros`, `${totales.precisionTiros}%`],
+      [`Recuperaciones (T/P)`, `${totales.recuperaciones} / ${promedios.recuperaciones}`],
+      [`Pérdidas (T/P)`, `${totales.perdidas} / ${promedios.perdidas}`],
+      [`Intercepciones (T/P)`, `${totales.intercepciones} / ${promedios.intercepciones}`],
+      [`Bloqueos (T/P)`, `${totales.bloqueos} / ${promedios.bloqueos}`],
+      [`Paradas Realizadas (T/P)`, `${totales.paradasRealizadas} / ${promedios.paradasRealizadas}`],
+      [`Tiros a Portería (T/P)`, `${totales.tirosAPorteria} / ${promedios.tirosAPorteria}`],
+      [`Goles Concedidos (T/P)`, `${totales.golesConcedidos} / ${promedios.golesConcedidos}`],
+      [`Pases Exitosos Portero (T/P)`, `${totales.pasesExitososPortero} / ${promedios.pasesExitososPortero}`],
+      [`Duelos Mano a Mano Ganados (T/P)`, `${totales.duelosManoAManoGanados} / ${promedios.duelosManoAManoGanados}`],
+      [`Duelos Mano a Mano Totales (T/P)`, `${totales.duelosManoAManoTotales} / ${promedios.duelosManoAManoTotales}`],
+      [`% Duelos Mano a Mano`, `${totales.porcentajeDuelosManoAMano}%`],
+      [`Duelos Aéreos Ganados (T/P)`, `${totales.duelosAereosGanados} / ${promedios.duelosAereosGanados}`],
+      [`Duelos Aéreos Totales (T/P)`, `${totales.duelosAereosTotales} / ${promedios.duelosAereosTotales}`],
+      [`% Duelos Aéreos`, `${totales.porcentajeDuelosAereos}%`],
+    ];
+    stats.forEach(([label, value]) => {
+      doc.setFont(undefined, 'bold');
+      doc.text(`${label}:`, 20, y);
+      doc.setFont(undefined, 'normal');
+      doc.text(`${value}`, 80, y);
+      y += 7;
+      if (y > 200) {
+        doc.addPage();
+        y = 20;
+      }
+    });
+    // Gráficas
+    if (lineChartRef.current) {
+      const canvas = await html2canvas(lineChartRef.current, { scale: 2 });
+      const imgData = canvas.toDataURL('image/png');
+      if (y > 180) {
+        doc.addPage();
+        y = 20;
+      }
+      doc.setFontSize(14);
+      doc.setTextColor(1, 146, 13);
+      doc.text('Evolución del Jugador', 105, y + 10, { align: 'center' });
+      doc.setTextColor(0, 0, 0);
+      y += 15;
+      doc.addImage(imgData, 'PNG', 15, y, 180, 60);
+      y += 65;
+    }
+    if (radarChartRef.current) {
+      const canvas = await html2canvas(radarChartRef.current, { scale: 2 });
+      const imgData = canvas.toDataURL('image/png');
+      if (y > 180) {
+        doc.addPage();
+        y = 20;
+      }
+      doc.setFontSize(14);
+      doc.setTextColor(1, 146, 13);
+      doc.text('Comparativa Radar', 105, y + 10, { align: 'center' });
+      doc.setTextColor(0, 0, 0);
+      y += 15;
+      doc.addImage(imgData, 'PNG', 15, y, 180, 60);
+      y += 65;
+    }
+    // Pie de página
+    const fecha = new Date().toLocaleDateString();
+    doc.setFontSize(10);
+    doc.setTextColor(150, 150, 150);
+    doc.text(`Emitido por el Sistema de Reclutamiento de Futbolistas - ${fecha}`, 105, 290, { align: 'center' });
+    doc.save(`estadisticas_${jugador.nombre}_${jugador.apellido}.pdf`);
   };
 
   return (
@@ -307,7 +523,7 @@ const Estadisticas = () => {
                 </Row>
               </CardHeader>
               <CardBody>
-                <div style={{ minHeight: 320 }}>
+                <div style={{ minHeight: 320 }} ref={lineChartRef}>
                   <Line data={dataLine} options={optionsLine} />
                 </div>
               </CardBody>
@@ -371,7 +587,7 @@ const Estadisticas = () => {
                     <h4>Agrega al menos dos jugadores para comparar en el radar.</h4>
                   </div>
                 ) : (
-                  <div style={{ minHeight: 345 }}>
+                  <div style={{ minHeight: 345 }} ref={radarChartRef}>
                     <Radar data={dataRadar} options={optionsRadar} />
                   </div>
                 )}
@@ -412,7 +628,9 @@ const Estadisticas = () => {
                   </Col>
                   <Col md="6">
                     <Button 
-                    style={{ width: '100%', marginTop: '8px',  backgroundColor: '#01920D', borderColor: '#01920D', color: 'white' }}>
+                    style={{ width: '100%', marginTop: '8px',  backgroundColor: '#01920D', borderColor: '#01920D', color: 'white' }}
+                    onClick={handleEmitirPDF}
+                    >
                       Emitir PDF
                     </Button>
                   </Col>
