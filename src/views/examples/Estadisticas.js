@@ -279,14 +279,13 @@ const Estadisticas = () => {
     doc.setDrawColor(44, 206, 137); // Verde claro
     doc.line(15, y + 2, 195, y + 2);
     y += 8;
-    doc.setFontSize(12);
-    doc.text(`Nombre:`, 20, y); doc.text(`${jugador.nombre} ${jugador.apellido}`, 60, y);
+    doc.text(`Nombre: ${jugador.nombre} ${jugador.apellido}`, 20, y);
     y += 7;
-    doc.text(`Cédula:`, 20, y); doc.text(`${jugador.cedula}`, 60, y);
+    doc.text(`Cédula: ${jugador.cedula}`, 20, y);
     y += 7;
-    doc.text(`Posición:`, 20, y); doc.text(`${jugador.posicion}`, 60, y);
+    doc.text(`Posición: ${jugador.posicion}`, 20, y);
     y += 7;
-    doc.text(`Sesiones jugadas:`, 20, y); doc.text(`${sesionesCount}`, 60, y);
+    doc.text(`Sesiones jugadas: ${sesionesCount}`, 20, y);
     y += 10;
     // Sección de estadísticas
     doc.setFontSize(14);
@@ -323,10 +322,8 @@ const Estadisticas = () => {
       [`% Duelos Aéreos`, `${totales.porcentajeDuelosAereos}%`],
     ];
     stats.forEach(([label, value]) => {
-      doc.setFont(undefined, 'bold');
-      doc.text(`${label}:`, 20, y);
       doc.setFont(undefined, 'normal');
-      doc.text(`${value}`, 80, y);
+      doc.text(`${label}: ${value}`, 20, y);
       y += 7;
       if (y > 200) {
         doc.addPage();
